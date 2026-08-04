@@ -21,6 +21,7 @@ const MUTES_FILE = path.join(DATA_DIR, 'mutes.json');
 const WARNINGS_FILE = path.join(DATA_DIR, 'warnings.json');
 const CUSTOM_WORDS_FILE = path.join(DATA_DIR, 'custom_words.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+const IGNORED_FILE = path.join(DATA_DIR, 'ignored.json');
 const LOG_LEVEL = 'info';
 const ADMIN_CACHE_TTL = 60_000;
 const NON_ADMIN_INTERVAL = 60_000;
@@ -28,6 +29,7 @@ const SPAM_WINDOW = 5000;
 const SPAM_THRESHOLD = 5;
 const SPAM_MUTE_DURATION = 300_000;
 const DEFAULT_WARN_LIMIT = 3;
+const PURGE_BUFFER = 100;
 
 const logger = pino({
   level: LOG_LEVEL,
@@ -51,6 +53,9 @@ const warnings = new Map();
 const customBadwords = new Map();
 const groupSettings = new Map();
 const spamTimestamps = new Map();
+const msgKeyBuffer = new Map();
+const ignoredUsers = new Map();
+const groupStats = new Map();
 
 const STATUS = {
   startTime: Date.now(),
@@ -188,6 +193,28 @@ function isMuted(groupJid, userJid) {
   return true;
 }
 
+async function checkExpiredMutes(sock) {
+  const now = Date.now();
+  for (const [gJid, users] of mutedUsers) {
+    for (const [user, expires] of users) {
+      if (now > expires) {
+        users.delete(user);
+        const lang = getGroupLang(gJid);
+        let groupName = gJid;
+        try { groupName = (await sock.groupMetadata(gJid)).subject || gJid; } catch (_) {}
+        try {
+          await sock.sendMessage(user, { text: t(lang, 'unmuteDm')(groupName) });
+        } catch (_) {}
+        try {
+          await sock.sendMessage(gJid, { text: t(lang, 'unmuteGc')(user.split('@')[0]), mentions: [user] });
+        } catch (_) {}
+        saveMutes();
+      }
+    }
+    if (users.size === 0) mutedUsers.delete(gJid);
+  }
+}
+
 function cleanExpiredMutes() {
   for (const [gJid, users] of mutedUsers) {
     for (const [user, expires] of users) {
@@ -282,6 +309,37 @@ function setSetting(groupJid, key, value) {
   saveSettings();
 }
 
+function trackMsgKey(groupJid, key) {
+  if (!msgKeyBuffer.has(groupJid)) msgKeyBuffer.set(groupJid, []);
+  const buf = msgKeyBuffer.get(groupJid);
+  buf.push(key);
+  if (buf.length > PURGE_BUFFER) buf.shift();
+}
+
+function loadIgnored() {
+  const data = loadJson(IGNORED_FILE, 'ignored users');
+  for (const [gJid, users] of Object.entries(data)) {
+    ignoredUsers.set(gJid, new Set(users));
+  }
+}
+function saveIgnored() {
+  const data = {};
+  for (const [gJid, s] of ignoredUsers) data[gJid] = [...s];
+  saveJson(IGNORED_FILE, 'ignored users', data);
+}
+
+function isIgnored(groupJid, userJid) {
+  return ignoredUsers.get(groupJid)?.has(userJid) || false;
+}
+
+function bumpStat(groupJid, key) {
+  if (!groupStats.has(groupJid)) groupStats.set(groupJid, { warns: 0, bans: 0, kicks: 0, mutes: 0, deleted: 0, lastDay: 0 });
+  const s = groupStats.get(groupJid);
+  s[key] = (s[key] || 0) + 1;
+  if (Date.now() - s.lastDay > 86400000) { s.lastDay = Date.now(); s.today = 0; }
+  s.today = (s.today || 0) + 1;
+}
+
 function checkSpam(groupJid, userJid) {
   if (!groupJid || !userJid) return false;
   if (!getSetting(groupJid, 'antiSpam', true)) return false;
@@ -311,30 +369,54 @@ function checkCustomWords(text, groupJid) {
   return { found: false };
 }
 
-async function autoBanIfNeeded(sock, groupJid, userJid, groupName) {
+async function autoPunish(sock, groupJid, userJid, groupName) {
   const count = (warnings.get(groupJid)?.get(userJid) || []).length;
   const limit = getWarnLimit(groupJid);
   if (count < limit) return false;
 
+  const punish = getSetting(groupJid, 'warnPunish', 'ban');
+  const lang = getGroupLang(groupJid);
+
   try {
-    const [result] = await sock.groupParticipantsUpdate(groupJid, [userJid], 'remove');
-    if (result.status === '200') {
-      if (!bannedUsers.has(groupJid)) bannedUsers.set(groupJid, new Set());
-      bannedUsers.get(groupJid).add(userJid);
-      saveBannedUsers();
-      try { await sock.groupJoinApprovalMode(groupJid, 'on'); } catch (_) {}
+    if (punish === 'mute') {
+      const duration = getSetting(groupJid, 'warnPunishDuration', 300000);
+      if (!mutedUsers.has(groupJid)) mutedUsers.set(groupJid, new Map());
+      mutedUsers.get(groupJid).set(userJid, Date.now() + duration);
+      saveMutes();
       warnings.get(groupJid)?.delete(userJid);
       saveWarnings();
-      const lang = getGroupLang(groupJid);
+      const durStr = formatDuration(duration);
       try {
-        await sock.sendMessage(userJid, { text: t(lang, 'autoBanDm')(groupName, count, limit) });
+        await sock.sendMessage(userJid, { text: t(lang, 'autoMuteDm')(groupName, count, limit, durStr) });
       } catch (_) {}
-      await sock.sendMessage(groupJid, { text: t(lang, 'autoBanned')(userJid.split('@')[0], count, limit) });
-      logger.info({ userJid, group: groupJid, warns: count, limit }, 'Auto-banned user');
+      await sock.sendMessage(groupJid, { text: t(lang, 'autoMuted')(userJid.split('@')[0], count, limit, durStr), mentions: [userJid] });
+      return true;
+    }
+
+    const [result] = await sock.groupParticipantsUpdate(groupJid, [userJid], 'remove');
+    if (result.status === '200') {
+      warnings.get(groupJid)?.delete(userJid);
+      saveWarnings();
+
+      if (punish === 'ban') {
+        if (!bannedUsers.has(groupJid)) bannedUsers.set(groupJid, new Set());
+        bannedUsers.get(groupJid).add(userJid);
+        saveBannedUsers();
+        try { await sock.groupJoinApprovalMode(groupJid, 'on'); } catch (_) {}
+        try {
+          await sock.sendMessage(userJid, { text: t(lang, 'autoBanDm')(groupName, count, limit) });
+        } catch (_) {}
+        await sock.sendMessage(groupJid, { text: t(lang, 'autoBanned')(userJid.split('@')[0], count, limit), mentions: [userJid] });
+      } else {
+        try {
+          await sock.sendMessage(userJid, { text: t(lang, 'autoKickDm')(groupName, count, limit) });
+        } catch (_) {}
+        await sock.sendMessage(groupJid, { text: t(lang, 'autoKicked')(userJid.split('@')[0], count, limit), mentions: [userJid] });
+      }
       return true;
     }
   } catch (err) {
-    logger.error({ err, userJid, group: groupJid }, 'Failed to auto-ban');
+    logger.error({ err, userJid, group: groupJid }, 'Failed to auto-punish');
   }
   return false;
 }
@@ -379,7 +461,7 @@ async function connect() {
       adminCache.clear();
       nonAdminNotified.clear();
       if (nonAdminTimer) clearInterval(nonAdminTimer);
-      nonAdminTimer = setInterval(() => notifyNonAdminGroups(sock), NON_ADMIN_INTERVAL);
+      nonAdminTimer = setInterval(() => { notifyNonAdminGroups(sock); checkExpiredMutes(sock); }, NON_ADMIN_INTERVAL);
       notifyNonAdminGroups(sock);
     }
     if (connection === 'close') {
@@ -398,7 +480,7 @@ async function connect() {
     }
   });
 
-  sock.ev.on('group-participants.update', async ({ id, participants, action }) => {
+  sock.ev.on('group-participants.update', async ({ id, participants, action, author }) => {
     adminCache.delete(id);
     nonAdminNotified.delete(id);
 
@@ -418,6 +500,18 @@ async function connect() {
           if (bannedUsers.get(id)?.has(p)) continue;
           try {
             await sock.sendMessage(id, { text: welcome.replace('{user}', `@${p.split('@')[0]}`), mentions: [p] });
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (action === 'remove') {
+      const goodbye = getSetting(id, 'goodbye', '');
+      if (goodbye) {
+        for (const p of participants) {
+          if (author && author === p) continue;
+          try {
+            await sock.sendMessage(id, { text: goodbye.replace('{user}', `@${p.split('@')[0]}`), mentions: [p] });
           } catch (_) {}
         }
       }
@@ -452,8 +546,14 @@ async function handleMessage(sock, msg) {
   const text = extractText(msg);
   if (!text) return;
 
+  if (isGroup(remoteJid)) trackMsgKey(remoteJid, msg.key);
+
   if (isGroup(remoteJid) && isMuted(remoteJid, sender)) {
     await sock.sendMessage(remoteJid, { delete: msg.key });
+    addWarning(remoteJid, sender, 'muted', 'bot');
+    let groupName = 'Unknown Group';
+    try { groupName = (await sock.groupMetadata(remoteJid)).subject || groupName; } catch (_) {}
+    await autoPunish(sock, remoteJid, sender, groupName);
     return;
   }
 
@@ -461,6 +561,7 @@ async function handleMessage(sock, msg) {
   const replyJid = isGroup(remoteJid) ? remoteJid : sender;
 
   if (cmd === '!ping') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'pong') }); return; }
+  if (cmd === '!credits') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'credits') }); return; }
   if (cmd === '!help') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'helpPublic') }); return; }
   if (cmd === '!status') {
     await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'status')(STATUS.connected, formatUptime(Date.now() - STATUS.startTime)) });
@@ -479,7 +580,7 @@ async function handleMessage(sock, msg) {
         try { gname = (await sock.groupMetadata(remoteJid)).subject || gname; } catch (_) {}
         await sock.sendMessage(sender, { text: t(lang, 'spamMuteDm')(gname, formatDuration(SPAM_MUTE_DURATION)) });
       } catch (_) {}
-      await sock.sendMessage(remoteJid, { text: t(lang, 'spamMuted')(sender.split('@')[0]) });
+      await sock.sendMessage(remoteJid, { text: t(lang, 'spamMuted')(sender.split('@')[0]), mentions: [sender] });
     }
     await sock.sendMessage(remoteJid, { delete: msg.key });
     return;
@@ -506,12 +607,22 @@ async function handleMessage(sock, msg) {
     '?removeword': () => handleRemoveWord(sock, cmd, remoteJid),
     '?settings': () => handleSettings(sock, remoteJid),
     '?set-warnlimit': () => handleSetWarnLimit(sock, cmd, remoteJid),
+    '?set-warnpunish': () => handleSetWarnPunish(sock, cmd, remoteJid),
     '?set-antispam': () => handleSetAntiSpam(sock, cmd, remoteJid),
     '?set-welcome': () => handleSetWelcome(sock, cmd, remoteJid),
+    '?set-goodbye': () => handleSetGoodbye(sock, cmd, remoteJid),
+    '?purge': () => handlePurge(sock, cmd, remoteJid),
+    '?ignore': () => handleIgnore(sock, msg, remoteJid),
+    '?unignore': () => handleUnignore(sock, msg, remoteJid),
+    '?stats': () => handleStats(sock, remoteJid),
+    '?export': () => handleExport(sock, remoteJid),
+    '?import': () => handleImport(sock, cmd, remoteJid),
   };
 
   const prefix = Object.keys(commandMap).find(k => cmd.startsWith(k));
   if (prefix) { await commandMap[prefix](); return; }
+
+  if (isIgnored(remoteJid, sender)) return;
 
   let badResult = checkCustomWords(text, remoteJid);
   const isCustom = badResult.found;
@@ -522,13 +633,14 @@ async function handleMessage(sock, msg) {
   try { groupName = (await sock.groupMetadata(remoteJid)).subject || groupName; } catch (_) {}
 
   await sock.sendMessage(remoteJid, { delete: msg.key });
+  bumpStat(remoteJid, 'deleted');
 
   const lang = getGroupLang(remoteJid);
   const warnMsg = t(lang, 'profanityWarn')(groupName);
   try { await sock.sendMessage(sender, { text: warnMsg }); } catch (_) {}
 
   addWarning(remoteJid, sender, badResult.word, 'bot');
-  await autoBanIfNeeded(sock, remoteJid, sender, groupName);
+  await autoPunish(sock, remoteJid, sender, groupName);
 }
 
 async function handleAdminCommand(sock, msg, cmd, groupJid, sender) {
@@ -547,25 +659,28 @@ async function handleAdminCommand(sock, msg, cmd, groupJid, sender) {
     if (target === ownerJid) { await sock.sendMessage(groupJid, { text: t(lang, 'cantOwner') }); continue; }
 
     if (cmd.startsWith('?warn')) {
+      bumpStat(groupJid, 'warns');
       const reason = cmd.replace(/^\?warn\s*/, '').trim() || 'No reason provided';
       try { await sock.sendMessage(target, { text: t(lang, 'adminWarn')(groupName, reason) }); } catch (_) {}
       const count = addWarning(groupJid, target, reason, sender.split('@')[0]);
       const limit = getWarnLimit(groupJid);
-      await sock.sendMessage(groupJid, { text: t(lang, 'warnCount')(target.split('@')[0], count, limit) });
+      await sock.sendMessage(groupJid, { text: t(lang, 'warnCount')(target.split('@')[0], count, limit), mentions: [target] });
       await autoBanIfNeeded(sock, groupJid, target, groupName);
     }
 
     if (cmd.startsWith('?kick')) {
+      bumpStat(groupJid, 'kicks');
       try {
         const [r] = await sock.groupParticipantsUpdate(groupJid, [target], 'remove');
         if (r.status === '200') {
           warnings.get(groupJid)?.delete(target);
           saveWarnings();
-        } else { await sock.sendMessage(groupJid, { text: t(lang, 'kickFail')(target.split('@')[0], r.status) }); }
-      } catch (_) { await sock.sendMessage(groupJid, { text: t(lang, 'kickFailSimple')(target.split('@')[0]) }); }
+        } else { await sock.sendMessage(groupJid, { text: t(lang, 'kickFail')(target.split('@')[0], r.status), mentions: [target] }); }
+      } catch (_) { await sock.sendMessage(groupJid, { text: t(lang, 'kickFailSimple')(target.split('@')[0]), mentions: [target] }); }
     }
 
     if (cmd.startsWith('?ban')) {
+      bumpStat(groupJid, 'bans');
       try {
         const [r] = await sock.groupParticipantsUpdate(groupJid, [target], 'remove');
         if (r.status === '200') {
@@ -575,9 +690,9 @@ async function handleAdminCommand(sock, msg, cmd, groupJid, sender) {
           try { await sock.groupJoinApprovalMode(groupJid, 'on'); } catch (_) {}
           warnings.get(groupJid)?.delete(target);
           saveWarnings();
-          await sock.sendMessage(groupJid, { text: t(lang, 'banned')(target.split('@')[0]) });
-        } else { await sock.sendMessage(groupJid, { text: t(lang, 'banFail')(target.split('@')[0], r.status) }); }
-      } catch (_) { await sock.sendMessage(groupJid, { text: t(lang, 'banFailSimple')(target.split('@')[0]) }); }
+          await sock.sendMessage(groupJid, { text: t(lang, 'banned')(target.split('@')[0]), mentions: [target] });
+        } else { await sock.sendMessage(groupJid, { text: t(lang, 'banFail')(target.split('@')[0], r.status), mentions: [target] }); }
+      } catch (_) { await sock.sendMessage(groupJid, { text: t(lang, 'banFailSimple')(target.split('@')[0]), mentions: [target] }); }
     }
   }
 }
@@ -593,7 +708,7 @@ async function handleMuteCommand(sock, msg, cmd, groupJid, sender) {
       if (group?.has(target)) { group.delete(target); if (group.size === 0) mutedUsers.delete(groupJid); }
     }
     saveMutes();
-    await sock.sendMessage(groupJid, { text: t(lang, 'unmuted')(mentions.map(j => `@${j.split('@')[0]}`).join(', ')) });
+    await sock.sendMessage(groupJid, { text: t(lang, 'unmuted')(mentions.map(j => `@${j.split('@')[0]}`).join(', ')), mentions });
     return;
   }
 
@@ -613,10 +728,11 @@ async function handleMuteCommand(sock, msg, cmd, groupJid, sender) {
     if (target === ownerJid) { await sock.sendMessage(groupJid, { text: t(lang, 'cantOwner') }); continue; }
     if (!mutedUsers.has(groupJid)) mutedUsers.set(groupJid, new Map());
     mutedUsers.get(groupJid).set(target, Date.now() + ms);
+    bumpStat(groupJid, 'mutes');
     try { await sock.sendMessage(target, { text: t(lang, 'muteDm')(groupName, duration) }); } catch (_) {}
   }
   saveMutes();
-  await sock.sendMessage(groupJid, { text: t(lang, 'muted')(mentions.map(j => `@${j.split('@')[0]}`).join(', '), duration) });
+  await sock.sendMessage(groupJid, { text: t(lang, 'muted')(mentions.map(j => `@${j.split('@')[0]}`).join(', '), duration), mentions });
 }
 
 async function handleUnban(sock, msg, cmd, groupJid) {
@@ -628,7 +744,7 @@ async function handleUnban(sock, msg, cmd, groupJid) {
   for (const target of mentions) group.delete(target);
   if (group.size === 0) bannedUsers.delete(groupJid);
   saveBannedUsers();
-  await sock.sendMessage(groupJid, { text: t(lang, 'unbanned')(mentions.map(j => `@${j.split('@')[0]}`).join(', ')) });
+  await sock.sendMessage(groupJid, { text: t(lang, 'unbanned')(mentions.map(j => `@${j.split('@')[0]}`).join(', ')), mentions });
 }
 
 async function handleWarnings(sock, msg, cmd, groupJid) {
@@ -638,10 +754,10 @@ async function handleWarnings(sock, msg, cmd, groupJid) {
   for (const target of mentions) {
     const w = warnings.get(groupJid)?.get(target) || [];
     if (w.length === 0) {
-      await sock.sendMessage(groupJid, { text: t(lang, 'warningsNone')(target.split('@')[0]) });
+      await sock.sendMessage(groupJid, { text: t(lang, 'warningsNone')(target.split('@')[0]), mentions: [target] });
     } else {
       const entries = w.map((e, i) => `${i + 1}. ${e.reason} (${e.by})`).join('\n');
-      await sock.sendMessage(groupJid, { text: t(lang, 'warningsList')(target.split('@')[0], w.length, getWarnLimit(groupJid), entries) });
+      await sock.sendMessage(groupJid, { text: t(lang, 'warningsList')(target.split('@')[0], w.length, getWarnLimit(groupJid), entries), mentions: [target] });
     }
   }
 }
@@ -673,8 +789,11 @@ async function handleSettings(sock, groupJid) {
   const warnLimit = s.warnLimit ?? DEFAULT_WARN_LIMIT;
   const antiSpam = s.antiSpam !== false;
   const welcome = s.welcome || '-';
+  const punish = s.warnPunish || 'ban';
+  const punishDur = s.warnPunishDuration ? formatDuration(s.warnPunishDuration) : '';
   const langName = translations[lang]?.name || lang;
-  const msg = t(lang, 'settingsDisplay')(langName, lang, warnLimit, antiSpam ? 'ON' : 'OFF', banCount, muteCount, customCount, welcome);
+  const ignoredCount = ignoredUsers.get(groupJid)?.size || 0;
+  const msg = t(lang, 'settingsDisplay')(langName, lang, warnLimit, punish, punishDur, antiSpam ? 'ON' : 'OFF', banCount, muteCount, customCount, ignoredCount, welcome, s.goodbye || '-');
   await sock.sendMessage(groupJid, { text: msg });
 }
 
@@ -683,6 +802,23 @@ async function handleSetWarnLimit(sock, cmd, groupJid) {
   if (!n || n < 1) return;
   setSetting(groupJid, 'warnLimit', n);
   await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'warnLimitSet')(n) });
+}
+
+async function handleSetWarnPunish(sock, cmd, groupJid) {
+  const args = cmd.replace(/^\?set-warnpunish\s*/, '').trim().toLowerCase().split(/\s+/);
+  const type = args[0];
+  if (!['ban', 'kick', 'mute'].includes(type)) {
+    await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'warnPunishInvalid') });
+    return;
+  }
+  setSetting(groupJid, 'warnPunish', type);
+  if (type === 'mute') {
+    const ms = parseDuration(args[1] || '5m');
+    setSetting(groupJid, 'warnPunishDuration', ms);
+    await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'warnPunishSet')(type, formatDuration(ms)) });
+  } else {
+    await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'warnPunishSet')(type, '') });
+  }
 }
 
 async function handleSetAntiSpam(sock, cmd, groupJid) {
@@ -701,6 +837,84 @@ async function handleSetWelcome(sock, cmd, groupJid) {
   await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'welcomeSet')(msg || '(cleared)') });
 }
 
+async function handleSetGoodbye(sock, cmd, groupJid) {
+  const msg = cmd.replace(/^\?set-goodbye\s*/, '').trim();
+  if (!msg) { setSetting(groupJid, 'goodbye', ''); }
+  else { setSetting(groupJid, 'goodbye', msg); }
+  await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'goodbyeSet')(msg || '(cleared)') });
+}
+
+async function handlePurge(sock, cmd, groupJid) {
+  const n = parseInt(cmd.replace(/^\?purge\s*/, '').trim(), 10);
+  if (!n || n < 1 || n > PURGE_BUFFER) return;
+  const buf = msgKeyBuffer.get(groupJid);
+  if (!buf || buf.length === 0) return;
+  const keys = buf.splice(-Math.min(n, buf.length));
+  try {
+    for (const key of keys) await sock.sendMessage(groupJid, { delete: key });
+  } catch (_) {}
+}
+
+async function handleIgnore(sock, msg, groupJid) {
+  const mentions = getMentionedJids(msg);
+  const lang = getGroupLang(groupJid);
+  if (mentions.length === 0) { await sock.sendMessage(groupJid, { text: t(lang, 'noMention') }); return; }
+  for (const target of mentions) {
+    if (!ignoredUsers.has(groupJid)) ignoredUsers.set(groupJid, new Set());
+    ignoredUsers.get(groupJid).add(target);
+  }
+  saveIgnored();
+  const nameList = mentions.map(j => `@${j.split('@')[0]}`).join(', ');
+  await sock.sendMessage(groupJid, { text: t(lang, 'ignored')(nameList), mentions });
+}
+
+async function handleUnignore(sock, msg, groupJid) {
+  const mentions = getMentionedJids(msg);
+  const lang = getGroupLang(groupJid);
+  if (mentions.length === 0) { await sock.sendMessage(groupJid, { text: t(lang, 'noMention') }); return; }
+  for (const target of mentions) {
+    ignoredUsers.get(groupJid)?.delete(target);
+  }
+  saveIgnored();
+  const nameList = mentions.map(j => `@${j.split('@')[0]}`).join(', ');
+  await sock.sendMessage(groupJid, { text: t(lang, 'unignored')(nameList), mentions });
+}
+
+async function handleStats(sock, groupJid) {
+  const lang = getGroupLang(groupJid);
+  const s = groupStats.get(groupJid) || { warns: 0, bans: 0, kicks: 0, mutes: 0, deleted: 0, today: 0 };
+  const msg = t(lang, 'statsDisplay')(s.warns || 0, s.bans || 0, s.kicks || 0, s.mutes || 0, s.deleted || 0, s.today || 0);
+  await sock.sendMessage(groupJid, { text: msg });
+}
+
+async function handleExport(sock, groupJid) {
+  const data = {
+    lang: groupLangs.get(groupJid) || DEFAULT_LANG,
+    settings: groupSettings.get(groupJid) || {},
+    banned: [...(bannedUsers.get(groupJid) || [])],
+    ignored: [...(ignoredUsers.get(groupJid) || [])],
+    customWords: [...(customBadwords.get(groupJid) || [])],
+  };
+  const code = Buffer.from(JSON.stringify(data)).toString('base64');
+  await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'exported')(code) });
+}
+
+async function handleImport(sock, cmd, groupJid) {
+  const code = cmd.replace(/^\?import\s*/, '').trim();
+  try {
+    const data = JSON.parse(Buffer.from(code, 'base64').toString('utf8'));
+    if (data.settings) groupSettings.set(groupJid, data.settings);
+    if (data.lang) { groupLangs.set(groupJid, data.lang); saveGroupLangs(); }
+    if (data.banned) { bannedUsers.set(groupJid, new Set(data.banned)); saveBannedUsers(); }
+    if (data.ignored) { ignoredUsers.set(groupJid, new Set(data.ignored)); saveIgnored(); }
+    if (data.customWords) { customBadwords.set(groupJid, new Set(data.customWords)); saveCustomBadwords(); }
+    saveSettings();
+    await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'imported') });
+  } catch (_) {
+    await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'importInvalid') });
+  }
+}
+
 async function handleSetLang(sock, cmd, groupJid) {
   const code = cmd.replace(/^\?set-lang\s*/, '').trim().toLowerCase();
   if (!translations[code]) { await sock.sendMessage(groupJid, { text: t(DEFAULT_LANG, 'langUnknown')(code) }); return; }
@@ -709,6 +923,7 @@ async function handleSetLang(sock, cmd, groupJid) {
   await sock.sendMessage(groupJid, { text: t(code, 'langSet')(code, translations[code].name) });
 }
 
+loadIgnored();
 loadBannedUsers();
 loadGroupLangs();
 loadMutes();
