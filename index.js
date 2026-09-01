@@ -563,6 +563,12 @@ async function handleMessage(sock, msg) {
   if (cmd === '!ping') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'pong') }); return; }
   if (cmd === '!credits') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'credits') }); return; }
   if (cmd === '!help') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'helpPublic') }); return; }
+  if (cmd === '!coinflip') {
+    const lang = getGroupLang(remoteJid);
+    const result = Math.random() < 0.5 ? 'heads' : 'tails';
+    await sock.sendMessage(replyJid, { text: t(lang, 'coinflip')(t(lang, result)) });
+    return;
+  }
   if (cmd === '!status') {
     await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'status')(STATUS.connected, formatUptime(Date.now() - STATUS.startTime)) });
     return;

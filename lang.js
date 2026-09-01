@@ -1,6 +1,9 @@
 const translations = {
   en: {
     name: 'English',
+    coinflip: (result) => `🪙 *Coin flip:* ${result}!`,
+    heads: 'Heads',
+    tails: 'Tails',
     profanityWarn: (groupName) =>
       '⚠️ *Warning: Profanity Detected*\n\n' +
       `You sent a message in the group *${groupName}* that contained inappropriate language. ` +
@@ -40,6 +43,7 @@ const translations = {
       '!ping - Test if the bot is alive\n' +
       '!status - Show bot status\n' +
       '!credits - Show bot credits\n' +
+      '!coinflip - Flip a coin\n' +
       '!help  - Show this help\n\n' +
       'The bot automatically deletes profanity in groups where it is admin.',
     helpAdmin:
@@ -118,6 +122,9 @@ const translations = {
 
   cs: {
     name: 'Čeština',
+    coinflip: (result) => `🪙 *Hod mincí:* ${result}!`,
+    heads: 'Panna',
+    tails: 'Orel',
     profanityWarn: (groupName) =>
       '⚠️ *Varování: Detekovány vulgarity*\n\n' +
       `Ve skupině *${groupName}* jste poslali zprávu obsahující nevhodný jazyk. ` +
@@ -157,6 +164,7 @@ const translations = {
       '!ping - Otestovat zda bot běží\n' +
       '!status - Zobrazit stav bota\n' +
       '!credits - Zobrazit kredity bota\n' +
+      '!coinflip - Hodit si mincí\n' +
       '!help  - Zobrazit tuto nápovědu\n\n' +
       'Bot automaticky maže vulgarity ve skupinách, kde je admin.',
     helpAdmin:
@@ -235,6 +243,9 @@ const translations = {
 
   es: {
     name: 'Español',
+    coinflip: (result) => `🪙 *Lanzamiento de moneda:* ¡${result}!`,
+    heads: 'Cara',
+    tails: 'Cruz',
     profanityWarn: (groupName) =>
       '⚠️ *Advertencia: Lenguaje Inapropiado*\n\n' +
       `Enviaste un mensaje en el grupo *${groupName}* con lenguaje inapropiado. ` +
@@ -274,6 +285,7 @@ const translations = {
       '!ping - Probar si el bot está vivo\n' +
       '!status - Mostrar estado del bot\n' +
       '!credits - Mostrar créditos del bot\n' +
+      '!coinflip - Lanzar una moneda\n' +
       '!help  - Mostrar esta ayuda\n\n' +
       'El bot elimina automáticamente groserías en grupos donde es admin.',
     helpAdmin:
@@ -352,6 +364,9 @@ const translations = {
 
   de: {
     name: 'Deutsch',
+    coinflip: (result) => `🪙 *Münzwurf:* ${result}!`,
+    heads: 'Kopf',
+    tails: 'Zahl',
     profanityWarn: (groupName) =>
       '⚠️ *Warnung: Unangemessene Sprache*\n\n' +
       `Du hast in der Gruppe *${groupName}* eine Nachricht mit unangemessener Sprache gesendet. ` +
@@ -391,6 +406,7 @@ const translations = {
       '!ping - Testen ob der Bot läuft\n' +
       '!status - Bot-Status anzeigen\n' +
       '!credits - Bot-Credits anzeigen\n' +
+      '!coinflip - Eine Münze werfen\n' +
       '!help  - Diese Hilfe anzeigen\n\n' +
       'Der Bot löscht automatisch Schimpfwörter in Gruppen, in denen er Admin ist.',
     helpAdmin:
@@ -469,6 +485,9 @@ const translations = {
 
   fr: {
     name: 'Français',
+    coinflip: (result) => `🪙 *Pile ou face :* ${result} !`,
+    heads: 'Pile',
+    tails: 'Face',
     profanityWarn: (groupName) =>
       '⚠️ *Avertissement : Langage Inapproprié*\n\n' +
       `Vous avez envoyé un message dans le groupe *${groupName}* contenant un langage inapproprié. ` +
@@ -508,6 +527,7 @@ const translations = {
       '!ping - Tester si le bot est en vie\n' +
       '!status - Afficher le statut du bot\n' +
       '!credits - Afficher les crédits\n' +
+      '!coinflip - Lancer une pièce\n' +
       '!help  - Afficher cette aide\n\n' +
       'Le bot supprime automatiquement les grossièretés dans les groupes où il est admin.',
     helpAdmin:
@@ -586,6 +606,9 @@ const translations = {
 
   pt: {
     name: 'Português',
+    coinflip: (result) => `🪙 *Cara ou coroa:* ${result}!`,
+    heads: 'Cara',
+    tails: 'Coroa',
     profanityWarn: (groupName) =>
       '⚠️ *Aviso: Linguagem Inapropriada*\n\n' +
       `Você enviou uma mensagem no grupo *${groupName}* com linguagem inapropriada. ` +
@@ -625,6 +648,7 @@ const translations = {
       '!ping - Testar se o bot está vivo\n' +
       '!status - Mostrar status do bot\n' +
       '!credits - Mostrar créditos do bot\n' +
+      '!coinflip - Jogar uma moeda\n' +
       '!help  - Mostrar esta ajuda\n\n' +
       'O bot exclui automaticamente palavrões em grupos onde é admin.',
     helpAdmin:
@@ -703,6 +727,9 @@ const translations = {
 
   ru: {
     name: 'Русский',
+    coinflip: (result) => `🪙 *Подбрасывание монеты:* ${result}!`,
+    heads: 'Орёл',
+    tails: 'Решка',
     profanityWarn: (groupName) =>
       '⚠️ *Предупреждение: Нецензурная лексика*\n\n' +
       `Вы отправили сообщение в группе *${groupName}*, содержащее нецензурную лексику. ` +
@@ -742,6 +769,7 @@ const translations = {
       '!ping - Проверить работает ли бот\n' +
       '!status - Показать статус бота\n' +
       '!credits - Показать авторов\n' +
+      '!coinflip - Подбросить монету\n' +
       '!help  - Показать эту справку\n\n' +
       'Бот автоматически удаляет нецензурную лексику в группах, где он админ.',
     helpAdmin:
@@ -820,6 +848,9 @@ const translations = {
 
   id: {
     name: 'Bahasa Indonesia',
+    coinflip: (result) => `🪙 *Lempar koin:* ${result}!`,
+    heads: 'Kepala',
+    tails: 'Ekor',
     profanityWarn: (groupName) =>
       '⚠️ *Peringatan: Bahasa Tidak Pantas*\n\n' +
       `Anda mengirim pesan di grup *${groupName}* yang mengandung bahasa tidak pantas. ` +
@@ -859,6 +890,7 @@ const translations = {
       '!ping - Cek apakah bot hidup\n' +
       '!status - Tampilkan status bot\n' +
       '!credits - Tampilkan kredit bot\n' +
+      '!coinflip - Lempar koin\n' +
       '!help  - Tampilkan bantuan ini\n\n' +
       'Bot otomatis menghapus kata kasar di grup tempat bot menjadi admin.',
     helpAdmin:
