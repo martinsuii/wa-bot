@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WA Mod Bot — Docs &amp; Config Maker</title>
+<title data-i18n="siteTitle">WA Mod Bot — Docs &amp; Config Maker</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -31,10 +31,29 @@
     text-align: center;
     border-bottom: 1px solid var(--border);
     background: linear-gradient(180deg, #0b1220 0%, var(--bg) 100%);
+    position: relative;
   }
   header h1 { margin: 0 0 8px; font-size: 28px; }
   header h1 span { color: var(--accent); }
   header p { margin: 0; color: var(--muted); }
+  .lang-selector {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lang-selector label { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .lang-selector select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
   nav {
     display: flex;
     justify-content: center;
@@ -86,7 +105,7 @@
   }
   pre code { background: none; color: var(--green); }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .lang-selector { position: static; justify-content: center; margin-bottom: 12px; } }
   label { display: block; margin-bottom: 14px; font-size: 14px; }
   label span { display: block; margin-bottom: 6px; color: var(--muted); font-weight: 600; }
   input[type=text], input[type=number], select, textarea {
@@ -124,13 +143,9 @@
   }
   .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
   .btn:hover { filter: brightness(1.1); }
-  .output {
-    margin-top: 16px;
-    display: none;
-  }
+  .output { margin-top: 16px; display: none; }
   .output textarea { min-height: 110px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
   .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  .pill { display: inline-block; background: var(--panel-2); border: 1px solid var(--border); color: var(--accent); border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 2px; }
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--green); color: #06222a; padding: 10px 18px; border-radius: 8px;
@@ -144,148 +159,161 @@
 <body>
 
 <header>
+  <div class="lang-selector">
+    <label for="uiLang" data-i18n="uiLangLabel">Site language</label>
+    <select id="uiLang" onchange="setUILang(this.value)">
+      <option value="en">English</option>
+      <option value="cs">Čeština</option>
+      <option value="es">Español</option>
+      <option value="de">Deutsch</option>
+      <option value="fr">Français</option>
+      <option value="pt">Português</option>
+      <option value="ru">Русский</option>
+      <option value="id">Bahasa Indonesia</option>
+    </select>
+  </div>
   <h1>WA <span>Mod Bot</span></h1>
-  <p>Documentation &amp; online configuration generator</p>
+  <p data-i18n="tagline">Documentation &amp; online configuration generator</p>
 </header>
 
 <nav>
-  <button data-tab="overview" class="active">Overview</button>
-  <button data-tab="commands">Commands</button>
-  <button data-tab="languages">Languages</button>
-  <button data-tab="config">Config Maker</button>
+  <button data-tab="overview" class="active" data-i18n="navOverview">Overview</button>
+  <button data-tab="commands" data-i18n="navCommands">Commands</button>
+  <button data-tab="languages" data-i18n="navLanguages">Languages</button>
+  <button data-tab="config" data-i18n="navConfig">Config Maker</button>
 </nav>
 
 <main>
 
   <!-- ===================== OVERVIEW ===================== -->
   <section id="overview" class="active">
-    <h2>Overview</h2>
+    <h2 data-i18n="overviewTitle">Overview</h2>
     <div class="card">
-      <p>A WhatsApp moderation bot built with <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. It detects profanity, warns users, and provides admin tools for group management.</p>
+      <p data-i18n="overviewIntro">A WhatsApp moderation bot built with <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. It detects profanity, warns users, and provides admin tools for group management.</p>
       <pre><code>git clone https://github.com/martinsuii/wa-bot.git
 cd wa-bot
 npm install
 npm start</code></pre>
-      <p class="hint">On first run, scan the QR code in your terminal via <strong>WhatsApp → Linked Devices → Link a Device</strong>. Credentials are saved to <code>./auth/</code> and reused on subsequent starts.</p>
+      <p class="hint" data-i18n="overviewHint">On first run, scan the QR code in your terminal via <strong>WhatsApp → Linked Devices → Link a Device</strong>. Credentials are saved to <code>./auth/</code> and reused on subsequent starts.</p>
     </div>
 
-    <h3>Core Features</h3>
+    <h3 data-i18n="coreFeatures">Core Features</h3>
     <div class="card">
       <table>
-        <tr><td><strong>Profanity detection</strong></td><td>20+ languages, leet-speak normalization, suffix/prefix evasion handling</td></tr>
-        <tr><td><strong>Warning system</strong></td><td>Tracked per user, auto-punishes after reaching the limit</td></tr>
-        <tr><td><strong>Anti-spam</strong></td><td>5 messages in 5 seconds triggers auto-mute</td></tr>
-        <tr><td><strong>Ban enforcement</strong></td><td>Auto-kicks banned users if re-added, rejects join requests</td></tr>
-        <tr><td><strong>Multi-language</strong></td><td>8 languages, per-group setting</td></tr>
-        <tr><td><strong>Custom badwords</strong></td><td>Group-specific word lists</td></tr>
-        <tr><td><strong>Welcome &amp; goodbye</strong></td><td>Configurable messages for joining/leaving members</td></tr>
-        <tr><td><strong>Persistence</strong></td><td>All data survives restarts via JSON files in <code>./data/</code></td></tr>
-        <tr><td><strong>Config sharing</strong></td><td>Export/import group settings as a portable code</td></tr>
+        <tr><td><strong data-i18n="featProfanityName">Profanity detection</strong></td><td data-i18n="featProfanityDesc">20+ languages, leet-speak normalization, suffix/prefix evasion handling</td></tr>
+        <tr><td><strong data-i18n="featWarningsName">Warning system</strong></td><td data-i18n="featWarningsDesc">Tracked per user, auto-punishes after reaching the limit</td></tr>
+        <tr><td><strong data-i18n="featAntispamName">Anti-spam</strong></td><td data-i18n="featAntispamDesc">5 messages in 5 seconds triggers auto-mute</td></tr>
+        <tr><td><strong data-i18n="featBanName">Ban enforcement</strong></td><td data-i18n="featBanDesc">Auto-kicks banned users if re-added, rejects join requests</td></tr>
+        <tr><td><strong data-i18n="featMultilangName">Multi-language</strong></td><td data-i18n="featMultilangDesc">8 languages, per-group setting</td></tr>
+        <tr><td><strong data-i18n="featCustomName">Custom badwords</strong></td><td data-i18n="featCustomDesc">Group-specific word lists</td></tr>
+        <tr><td><strong data-i18n="featWelcomeName">Welcome &amp; goodbye</strong></td><td data-i18n="featWelcomeDesc">Configurable messages for joining/leaving members</td></tr>
+        <tr><td><strong data-i18n="featPersistenceName">Persistence</strong></td><td data-i18n="featPersistenceDesc">All data survives restarts via JSON files in <code>./data/</code></td></tr>
+        <tr><td><strong data-i18n="featSharingName">Config sharing</strong></td><td data-i18n="featSharingDesc">Export/import group settings as a portable code</td></tr>
       </table>
     </div>
 
-    <h3>How It Works</h3>
+    <h3 data-i18n="howItWorks">How It Works</h3>
     <div class="card">
       <ol style="margin:0; padding-left:20px;">
-        <li>The bot connects to WhatsApp Web via Baileys</li>
-        <li>It listens for messages in all groups it's a member of</li>
-        <li>With admin privileges, it scans messages for profanity</li>
-        <li>Offending messages are deleted and the sender receives a DM warning</li>
-        <li>Admin commands (<code>?</code> prefix) allow moderators to warn, kick, ban, mute, and configure the bot</li>
+        <li data-i18n="how1">The bot connects to WhatsApp Web via Baileys</li>
+        <li data-i18n="how2">It listens for messages in all groups it's a member of</li>
+        <li data-i18n="how3">With admin privileges, it scans messages for profanity</li>
+        <li data-i18n="how4">Offending messages are deleted and the sender receives a DM warning</li>
+        <li data-i18n="how5">Admin commands (<code>?</code> prefix) allow moderators to warn, kick, ban, mute, and configure the bot</li>
       </ol>
     </div>
 
-    <h3>Requirements</h3>
+    <h3 data-i18n="requirements">Requirements</h3>
     <div class="card">
       <ul style="margin:0;">
-        <li>Node.js 18+</li>
-        <li>A WhatsApp account (used as the bot's number)</li>
+        <li data-i18n="req1">Node.js 18+</li>
+        <li data-i18n="req2">A WhatsApp account (used as the bot's number)</li>
       </ul>
     </div>
   </section>
 
   <!-- ===================== COMMANDS ===================== -->
   <section id="commands">
-    <h2>Commands</h2>
+    <h2 data-i18n="commandsTitle">Commands</h2>
 
-    <h3>Public Commands</h3>
+    <h3 data-i18n="publicCommands">Public Commands</h3>
     <div class="card">
-      <p class="hint" style="margin-top:0;">These work for anyone, in both groups and DMs.</p>
+      <p class="hint" style="margin-top:0;" data-i18n="publicHint">These work for anyone, in both groups and DMs.</p>
       <table>
-        <tr><th>Command</th><th>Description</th></tr>
-        <tr><td><code>!ping</code></td><td>Bot responds with "Pong!"</td></tr>
-        <tr><td><code>!status</code></td><td>Shows connection status and uptime</td></tr>
-        <tr><td><code>!help</code></td><td>Shows public command list</td></tr>
+        <tr><th data-i18n="thCommand">Command</th><th data-i18n="thDescription">Description</th></tr>
+        <tr><td><code>!ping</code></td><td data-i18n="pub1">Bot responds with "Pong!"</td></tr>
+        <tr><td><code>!status</code></td><td data-i18n="pub2">Shows connection status and uptime</td></tr>
+        <tr><td><code>!help</code></td><td data-i18n="pub3">Shows public command list</td></tr>
       </table>
     </div>
 
-    <h3>Admin Commands</h3>
+    <h3 data-i18n="adminCommands">Admin Commands</h3>
     <div class="card">
-      <p class="hint" style="margin-top:0;">These require the bot to have admin privileges in the group. They use the <code>?</code> prefix and require @mentioning the target user.</p>
+      <p class="hint" style="margin-top:0;" data-i18n="adminHint">These require the bot to have admin privileges in the group. They use the <code>?</code> prefix and require @mentioning the target user.</p>
       <table>
-        <tr><th>Command</th><th>Description</th></tr>
-        <tr><td><code>?warn @user [reason]</code></td><td>Warn user via DM, increments warning count</td></tr>
-        <tr><td><code>?warnings @user</code></td><td>Show warning history for the user</td></tr>
-        <tr><td><code>?kick @user</code></td><td>Remove user from the group</td></tr>
-        <tr><td><code>?ban @user</code></td><td>Ban user (auto-reject rejoin)</td></tr>
-        <tr><td><code>?unban @user</code></td><td>Remove ban, allowing rejoin</td></tr>
-        <tr><td><code>?mute @user &lt;time&gt; [s|m|d]</code></td><td>Auto-delete user's messages for duration</td></tr>
-        <tr><td><code>?unmute @user</code></td><td>Remove mute</td></tr>
-        <tr><td><code>?addword &lt;word&gt;</code></td><td>Add a group-specific banned word</td></tr>
-        <tr><td><code>?removeword &lt;word&gt;</code></td><td>Remove a group-specific banned word</td></tr>
-        <tr><td><code>?purge &lt;n&gt;</code></td><td>Delete the last n messages tracked by the bot</td></tr>
-        <tr><td><code>?ignore @user</code></td><td>Ignore a user (skip moderation &amp; profanity checks)</td></tr>
-        <tr><td><code>?unignore @user</code></td><td>Stop ignoring a user</td></tr>
-        <tr><td><code>?stats</code></td><td>Show moderation statistics</td></tr>
-        <tr><td><code>?settings</code></td><td>Show current group configuration</td></tr>
-        <tr><td><code>?help</code></td><td>Show admin command list with available languages</td></tr>
+        <tr><th data-i18n="thCommand">Command</th><th data-i18n="thDescription">Description</th></tr>
+        <tr><td><code>?warn @user [reason]</code></td><td data-i18n="admin1">Warn user via DM, increments warning count</td></tr>
+        <tr><td><code>?warnings @user</code></td><td data-i18n="admin2">Show warning history for the user</td></tr>
+        <tr><td><code>?kick @user</code></td><td data-i18n="admin3">Remove user from the group</td></tr>
+        <tr><td><code>?ban @user</code></td><td data-i18n="admin4">Ban user (auto-reject rejoin)</td></tr>
+        <tr><td><code>?unban @user</code></td><td data-i18n="admin5">Remove ban, allowing rejoin</td></tr>
+        <tr><td><code>?mute @user &lt;time&gt; [s|m|d]</code></td><td data-i18n="admin6">Auto-delete user's messages for duration</td></tr>
+        <tr><td><code>?unmute @user</code></td><td data-i18n="admin7">Remove mute</td></tr>
+        <tr><td><code>?addword &lt;word&gt;</code></td><td data-i18n="admin8">Add a group-specific banned word</td></tr>
+        <tr><td><code>?removeword &lt;word&gt;</code></td><td data-i18n="admin9">Remove a group-specific banned word</td></tr>
+        <tr><td><code>?purge &lt;n&gt;</code></td><td data-i18n="admin10">Delete the last n messages tracked by the bot</td></tr>
+        <tr><td><code>?ignore @user</code></td><td data-i18n="admin11">Ignore a user (skip moderation &amp; profanity checks)</td></tr>
+        <tr><td><code>?unignore @user</code></td><td data-i18n="admin12">Stop ignoring a user</td></tr>
+        <tr><td><code>?stats</code></td><td data-i18n="admin13">Show moderation statistics</td></tr>
+        <tr><td><code>?settings</code></td><td data-i18n="admin14">Show current group configuration</td></tr>
+        <tr><td><code>?help</code></td><td data-i18n="admin15">Show admin command list with available languages</td></tr>
       </table>
     </div>
 
-    <h3>Configuration Commands</h3>
+    <h3 data-i18n="configCommands">Configuration Commands</h3>
     <div class="card">
       <table>
-        <tr><th>Command</th><th>Description</th></tr>
-        <tr><td><code>?set-lang &lt;code&gt;</code></td><td>Set bot language for this group</td></tr>
-        <tr><td><code>?set-warnlimit &lt;n&gt;</code></td><td>Warnings before auto-punish (default: 3)</td></tr>
-        <tr><td><code>?set-warnpunish ban|kick|mute [dur]</code></td><td>Punishment for reaching warn limit</td></tr>
-        <tr><td><code>?set-antispam on|off</code></td><td>Toggle anti-spam feature</td></tr>
-        <tr><td><code>?set-welcome &lt;msg&gt;</code></td><td>Set welcome message for new members</td></tr>
-        <tr><td><code>?set-goodbye &lt;msg&gt;</code></td><td>Set goodbye message for leaving members</td></tr>
+        <tr><th data-i18n="thCommand">Command</th><th data-i18n="thDescription">Description</th></tr>
+        <tr><td><code>?set-lang &lt;code&gt;</code></td><td data-i18n="config1">Set bot language for this group</td></tr>
+        <tr><td><code>?set-warnlimit &lt;n&gt;</code></td><td data-i18n="config2">Warnings before auto-punish (default: 3)</td></tr>
+        <tr><td><code>?set-warnpunish ban|kick|mute [dur]</code></td><td data-i18n="config3">Punishment for reaching warn limit</td></tr>
+        <tr><td><code>?set-antispam on|off</code></td><td data-i18n="config4">Toggle anti-spam feature</td></tr>
+        <tr><td><code>?set-welcome &lt;msg&gt;</code></td><td data-i18n="config5">Set welcome message for new members</td></tr>
+        <tr><td><code>?set-goodbye &lt;msg&gt;</code></td><td data-i18n="config6">Set goodbye message for leaving members</td></tr>
       </table>
-      <p class="hint">Use <code>{user}</code> as a placeholder for the member's name in welcome/goodbye messages.</p>
+      <p class="hint" data-i18n="userHint">Use <code>{user}</code> as a placeholder for the member's name in welcome/goodbye messages.</p>
     </div>
 
-    <h3>Export &amp; Import</h3>
+    <h3 data-i18n="exportImport">Export &amp; Import</h3>
     <div class="card">
       <table>
-        <tr><th>Command</th><th>Description</th></tr>
-        <tr><td><code>?export</code></td><td>Generate a code with the group's full configuration</td></tr>
-        <tr><td><code>?import &lt;code&gt;</code></td><td>Apply a configuration code to this group</td></tr>
+        <tr><th data-i18n="thCommand">Command</th><th data-i18n="thDescription">Description</th></tr>
+        <tr><td><code>?export</code></td><td data-i18n="export1">Generate a code with the group's full configuration</td></tr>
+        <tr><td><code>?import &lt;code&gt;</code></td><td data-i18n="export2">Apply a configuration code to this group</td></tr>
       </table>
-      <p class="hint">Generate a code in the <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Config Maker</a> tab, then send it in any group with <code>?import</code>.</p>
+      <p class="hint" data-i18n="exportHint">Generate a code in the <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Config Maker</a> tab, then send it in any group with <code>?import</code>.</p>
     </div>
 
-    <h3>Auto-Moderation</h3>
+    <h3 data-i18n="autoModeration">Auto-Moderation</h3>
     <div class="card">
-      <p>When the bot detects profanity in a message, it automatically:</p>
+      <p data-i18n="autoIntro">When the bot detects profanity in a message, it automatically:</p>
       <ol style="margin:0; padding-left:20px;">
-        <li>Deletes the message</li>
-        <li>DMs the sender a warning</li>
-        <li>Records the warning</li>
+        <li data-i18n="auto1">Deletes the message</li>
+        <li data-i18n="auto2">DMs the sender a warning</li>
+        <li data-i18n="auto3">Records the warning</li>
       </ol>
-      <p style="margin-bottom:0;">If a user reaches the warn limit (default 3), they are auto-punished (ban/kick/mute) according to the group's <code>warnPunish</code> setting.</p>
+      <p style="margin-bottom:0;" data-i18n="autoFinal">If a user reaches the warn limit (default 3), they are auto-punished (ban/kick/mute) according to the group's <code>warnPunish</code> setting.</p>
     </div>
   </section>
 
   <!-- ===================== LANGUAGES ===================== -->
   <section id="languages">
-    <h2>Languages</h2>
+    <h2 data-i18n="languagesTitle">Languages</h2>
     <div class="card">
-      <p>The bot supports 8 languages. Language is set <strong>per-group</strong> and persists across restarts.</p>
+      <p data-i18n="languagesIntro">The bot supports 8 languages. Language is set <strong>per-group</strong> and persists across restarts.</p>
       <table>
-        <tr><th>Code</th><th>Language</th></tr>
-        <tr><td><code>en</code></td><td>English <span class="tag">(default)</span></td></tr>
+        <tr><th data-i18n="thCode">Code</th><th data-i18n="thLanguage">Language</th></tr>
+        <tr><td><code>en</code></td><td>English <span class="tag" data-i18n="tagDefault">(default)</span></td></tr>
         <tr><td><code>cs</code></td><td>Čeština (Czech)</td></tr>
         <tr><td><code>es</code></td><td>Español (Spanish)</td></tr>
         <tr><td><code>de</code></td><td>Deutsch (German)</td></tr>
@@ -296,33 +324,33 @@ npm start</code></pre>
       </table>
     </div>
     <div class="card">
-      <h3 style="margin-top:0;">Setting a language</h3>
+      <h3 style="margin-top:0;" data-i18n="settingLang">Setting a language</h3>
       <pre><code>?set-lang cs</code></pre>
-      <p>All bot messages in that group will use the selected language: profanity warnings, admin command responses, auto-moderation messages, status and help output.</p>
-      <p>If an unsupported code is used, the bot responds with the list of valid codes. If no language is set, or a translation key is missing, English is used as the fallback.</p>
+      <p data-i18n="settingLangP1">All bot messages in that group will use the selected language: profanity warnings, admin command responses, auto-moderation messages, status and help output.</p>
+      <p data-i18n="settingLangP2">If an unsupported code is used, the bot responds with the list of valid codes. If no language is set, or a translation key is missing, English is used as the fallback.</p>
     </div>
   </section>
 
   <!-- ===================== CONFIG MAKER ===================== -->
   <section id="config">
-    <h2>Config Maker</h2>
+    <h2 data-i18n="configTitle">Config Maker</h2>
 
     <div class="card">
-      <h3 style="margin-top:0;">Import an existing code</h3>
+      <h3 style="margin-top:0;" data-i18n="importCodeTitle">Import an existing code</h3>
       <label>
-        <span>Paste a code (with or without <code>?import</code>) to edit it further</span>
-        <textarea id="importInput" placeholder="?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi..."></textarea>
+        <span data-i18n="importCodeLabel">Paste a code (with or without <code>?import</code>) to edit it further</span>
+        <textarea id="importInput" data-i18n-ph="importPlaceholder" placeholder="?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi..."></textarea>
       </label>
-      <button class="btn secondary" onclick="loadCode()">Load code</button>
-      <div class="error" id="importError">Invalid code. Make sure it's a valid base64 config.</div>
+      <button class="btn secondary" onclick="loadCode()" data-i18n="loadCodeBtn">Load code</button>
+      <div class="error" id="importError" data-i18n="importError">Invalid code. Make sure it's a valid base64 config.</div>
     </div>
 
     <div class="card">
-      <h3 style="margin-top:0;">Configure your group</h3>
+      <h3 style="margin-top:0;" data-i18n="configureTitle">Configure your group</h3>
       <div class="grid">
         <div>
           <label>
-            <span>Language</span>
+            <span data-i18n="labelLang">Language</span>
             <select id="lang">
               <option value="en">en — English</option>
               <option value="cs">cs — Čeština (Czech)</option>
@@ -336,12 +364,12 @@ npm start</code></pre>
           </label>
 
           <label>
-            <span>Warn limit (auto-punish after this many warnings)</span>
+            <span data-i18n="labelWarnLimit">Warn limit (auto-punish after this many warnings)</span>
             <input type="number" id="warnLimit" value="3" min="1">
           </label>
 
           <label>
-            <span>Punishment when warn limit is reached</span>
+            <span data-i18n="labelPunish">Punishment when warn limit is reached</span>
             <select id="warnPunish" onchange="togglePunishDuration()">
               <option value="ban">ban</option>
               <option value="kick">kick</option>
@@ -350,12 +378,12 @@ npm start</code></pre>
           </label>
 
           <label id="punishDurationWrap" style="display:none;">
-            <span>Mute duration (e.g. 5m, 30s, 1d)</span>
+            <span data-i18n="labelMuteDuration">Mute duration (e.g. 5m, 30s, 1d)</span>
             <input type="text" id="punishDuration" value="5m" placeholder="5m">
           </label>
 
           <div class="switch-row">
-            <span>Anti-spam</span>
+            <span data-i18n="labelAntiSpam">Anti-spam</span>
             <label class="switch">
               <input type="checkbox" id="antiSpam" checked>
               <span class="slider"></span>
@@ -365,45 +393,45 @@ npm start</code></pre>
 
         <div>
           <label>
-            <span>Welcome message (<code>{user}</code> = member name)</span>
+            <span data-i18n="labelWelcome">Welcome message (<code>{user}</code> = member name)</span>
             <input type="text" id="welcome" placeholder="Hello {user}, welcome!">
           </label>
 
           <label>
-            <span>Goodbye message (<code>{user}</code> = member name)</span>
+            <span data-i18n="labelGoodbye">Goodbye message (<code>{user}</code> = member name)</span>
             <input type="text" id="goodbye" placeholder="Goodbye {user}.">
           </label>
 
           <label>
-            <span>Custom badwords (one per line)</span>
+            <span data-i18n="labelCustomWords">Custom badwords (one per line)</span>
             <textarea id="customWords" placeholder="spoiler&#10;leak"></textarea>
           </label>
         </div>
       </div>
 
       <label>
-        <span>Banned JIDs (one per line)</span>
+        <span data-i18n="labelBanned">Banned JIDs (one per line)</span>
         <textarea id="banned" placeholder="123456789@s.whatsapp.net"></textarea>
       </label>
 
       <label>
-        <span>Ignored JIDs (one per line)</span>
+        <span data-i18n="labelIgnored">Ignored JIDs (one per line)</span>
         <textarea id="ignored" placeholder="123456789@s.whatsapp.net"></textarea>
       </label>
     </div>
 
     <div class="card">
-      <button class="btn" onclick="generateCode()">Generate ?import code</button>
-      <button class="btn secondary" onclick="clearAll()">Clear form</button>
+      <button class="btn" onclick="generateCode()" data-i18n="genBtn">Generate ?import code</button>
+      <button class="btn secondary" onclick="clearAll()" data-i18n="clearBtn">Clear form</button>
 
       <div class="output" id="output">
         <label>
-          <span>Import command</span>
+          <span data-i18n="importCommandLabel">Import command</span>
           <textarea id="commandOutput" readonly onclick="this.select()"></textarea>
         </label>
-        <button class="btn secondary" onclick="copyCommand()">Copy command</button>
-        <button class="btn secondary" onclick="copyCode()">Copy code only</button>
-        <p class="hint">Send the <code>?import &lt;code&gt;</code> command in your group to apply this configuration.</p>
+        <button class="btn secondary" onclick="copyCommand()" data-i18n="copyCommandBtn">Copy command</button>
+        <button class="btn secondary" onclick="copyCode()" data-i18n="copyCodeBtn">Copy code only</button>
+        <p class="hint" data-i18n="applyHint">Send the <code>?import &lt;code&gt;</code> command in your group to apply this configuration.</p>
       </div>
     </div>
   </section>
@@ -414,9 +442,976 @@ npm start</code></pre>
 
 <script>
   const LANGS = ['en','cs','es','de','fr','pt','ru','id'];
+  const UI_LANGS = ['en','cs','es','de','fr','pt','ru','id'];
   let currentCode = '';
+  let currentLang = 'en';
+
+  const I18N = {
+    en: {
+      siteTitle: `WA Mod Bot — Docs & Config Maker`,
+      tagline: `Documentation & online configuration generator`,
+      uiLangLabel: `Site language`,
+      navOverview: `Overview`,
+      navCommands: `Commands`,
+      navLanguages: `Languages`,
+      navConfig: `Config Maker`,
+      overviewTitle: `Overview`,
+      overviewIntro: `A WhatsApp moderation bot built with <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. It detects profanity, warns users, and provides admin tools for group management.`,
+      overviewHint: `On first run, scan the QR code in your terminal via <strong>WhatsApp → Linked Devices → Link a Device</strong>. Credentials are saved to <code>./auth/</code> and reused on subsequent starts.`,
+      coreFeatures: `Core Features`,
+      featProfanityName: `Profanity detection`,
+      featProfanityDesc: `20+ languages, leet-speak normalization, suffix/prefix evasion handling`,
+      featWarningsName: `Warning system`,
+      featWarningsDesc: `Tracked per user, auto-punishes after reaching the limit`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 messages in 5 seconds triggers auto-mute`,
+      featBanName: `Ban enforcement`,
+      featBanDesc: `Auto-kicks banned users if re-added, rejects join requests`,
+      featMultilangName: `Multi-language`,
+      featMultilangDesc: `8 languages, per-group setting`,
+      featCustomName: `Custom badwords`,
+      featCustomDesc: `Group-specific word lists`,
+      featWelcomeName: `Welcome & goodbye`,
+      featWelcomeDesc: `Configurable messages for joining/leaving members`,
+      featPersistenceName: `Persistence`,
+      featPersistenceDesc: `All data survives restarts via JSON files in <code>./data/</code>`,
+      featSharingName: `Config sharing`,
+      featSharingDesc: `Export/import group settings as a portable code`,
+      howItWorks: `How It Works`,
+      how1: `The bot connects to WhatsApp Web via Baileys`,
+      how2: `It listens for messages in all groups it's a member of`,
+      how3: `With admin privileges, it scans messages for profanity`,
+      how4: `Offending messages are deleted and the sender receives a DM warning`,
+      how5: `Admin commands (<code>?</code> prefix) allow moderators to warn, kick, ban, mute, and configure the bot`,
+      requirements: `Requirements`,
+      req1: `Node.js 18+`,
+      req2: `A WhatsApp account (used as the bot's number)`,
+      commandsTitle: `Commands`,
+      publicCommands: `Public Commands`,
+      publicHint: `These work for anyone, in both groups and DMs.`,
+      thCommand: `Command`,
+      thDescription: `Description`,
+      pub1: `Bot responds with "Pong!"`,
+      pub2: `Shows connection status and uptime`,
+      pub3: `Shows public command list`,
+      adminCommands: `Admin Commands`,
+      adminHint: `These require the bot to have admin privileges in the group. They use the <code>?</code> prefix and require @mentioning the target user.`,
+      admin1: `Warn user via DM, increments warning count`,
+      admin2: `Show warning history for the user`,
+      admin3: `Remove user from the group`,
+      admin4: `Ban user (auto-reject rejoin)`,
+      admin5: `Remove ban, allowing rejoin`,
+      admin6: `Auto-delete user's messages for duration`,
+      admin7: `Remove mute`,
+      admin8: `Add a group-specific banned word`,
+      admin9: `Remove a group-specific banned word`,
+      admin10: `Delete the last n messages tracked by the bot`,
+      admin11: `Ignore a user (skip moderation & profanity checks)`,
+      admin12: `Stop ignoring a user`,
+      admin13: `Show moderation statistics`,
+      admin14: `Show current group configuration`,
+      admin15: `Show admin command list with available languages`,
+      configCommands: `Configuration Commands`,
+      config1: `Set bot language for this group`,
+      config2: `Warnings before auto-punish (default: 3)`,
+      config3: `Punishment for reaching warn limit`,
+      config4: `Toggle anti-spam feature`,
+      config5: `Set welcome message for new members`,
+      config6: `Set goodbye message for leaving members`,
+      userHint: `Use <code>{user}</code> as a placeholder for the member's name in welcome/goodbye messages.`,
+      exportImport: `Export & Import`,
+      export1: `Generate a code with the group's full configuration`,
+      export2: `Apply a configuration code to this group`,
+      exportHint: `Generate a code in the <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Config Maker</a> tab, then send it in any group with <code>?import</code>.`,
+      autoModeration: `Auto-Moderation`,
+      autoIntro: `When the bot detects profanity in a message, it automatically:`,
+      auto1: `Deletes the message`,
+      auto2: `DMs the sender a warning`,
+      auto3: `Records the warning`,
+      autoFinal: `If a user reaches the warn limit (default 3), they are auto-punished (ban/kick/mute) according to the group's <code>warnPunish</code> setting.`,
+      languagesTitle: `Languages`,
+      languagesIntro: `The bot supports 8 languages. Language is set <strong>per-group</strong> and persists across restarts.`,
+      thCode: `Code`,
+      thLanguage: `Language`,
+      tagDefault: `(default)`,
+      settingLang: `Setting a language`,
+      settingLangP1: `All bot messages in that group will use the selected language: profanity warnings, admin command responses, auto-moderation messages, status and help output.`,
+      settingLangP2: `If an unsupported code is used, the bot responds with the list of valid codes. If no language is set, or a translation key is missing, English is used as the fallback.`,
+      configTitle: `Config Maker`,
+      importCodeTitle: `Import an existing code`,
+      importCodeLabel: `Paste a code (with or without <code>?import</code>) to edit it further`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Load code`,
+      importError: `Invalid code. Make sure it's a valid base64 config.`,
+      configureTitle: `Configure your group`,
+      labelLang: `Language`,
+      labelWarnLimit: `Warn limit (auto-punish after this many warnings)`,
+      labelPunish: `Punishment when warn limit is reached`,
+      labelMuteDuration: `Mute duration (e.g. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Welcome message (<code>{user}</code> = member name)`,
+      labelGoodbye: `Goodbye message (<code>{user}</code> = member name)`,
+      labelCustomWords: `Custom badwords (one per line)`,
+      labelBanned: `Banned JIDs (one per line)`,
+      labelIgnored: `Ignored JIDs (one per line)`,
+      genBtn: `Generate ?import code`,
+      clearBtn: `Clear form`,
+      importCommandLabel: `Import command`,
+      copyCommandBtn: `Copy command`,
+      copyCodeBtn: `Copy code only`,
+      applyHint: `Send the <code>?import &lt;code&gt;</code> command in your group to apply this configuration.`,
+      toastCopied: `Copied to clipboard`,
+      toastLoaded: `Code loaded`
+    },
+    cs: {
+      siteTitle: `WA Mod Bot — Dokumentace a tvůrce konfigurace`,
+      tagline: `Dokumentace a online generátor konfigurace`,
+      uiLangLabel: `Jazyk webu`,
+      navOverview: `Přehled`,
+      navCommands: `Příkazy`,
+      navLanguages: `Jazyky`,
+      navConfig: `Tvůrce konfigurace`,
+      overviewTitle: `Přehled`,
+      overviewIntro: `WhatsApp moderační bot postavený na <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Detekuje vulgarismy, varuje uživatele a poskytuje administrátorské nástroje pro správu skupin.`,
+      overviewHint: `Při prvním spuštění naskenujte QR kód v terminálu přes <strong>WhatsApp → Propojená zařízení → Připojit zařízení</strong>. Přihlašovací údaje se uloží do <code>./auth/</code> a použijí se při dalších spuštěních.`,
+      coreFeatures: `Hlavní funkce`,
+      featProfanityName: `Detekce vulgarismů`,
+      featProfanityDesc: `20+ jazyků, normalizace leet-speaku, detekce obcházení předponami/příponami`,
+      featWarningsName: `Systém varování`,
+      featWarningsDesc: `Sledováno pro každého uživatele, po dosažení limitu automaticky trestá`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 zpráv za 5 sekund spustí automatické ztlumení`,
+      featBanName: `Vymáhání banů`,
+      featBanDesc: `Automaticky vykopne zabanované uživatele při opětovném přidání, odmítá žádosti o připojení`,
+      featMultilangName: `Vícejazyčnost`,
+      featMultilangDesc: `8 jazyků, nastavení pro každou skupinu`,
+      featCustomName: `Vlastní zakázaná slova`,
+      featCustomDesc: `Seznamy slov specifické pro skupinu`,
+      featWelcomeName: `Uvítání a rozloučení`,
+      featWelcomeDesc: `Konfigurovatelné zprávy pro příchozí/odchozí členy`,
+      featPersistenceName: `Trvalost dat`,
+      featPersistenceDesc: `Všechna data přežijí restart díky souborům JSON v <code>./data/</code>`,
+      featSharingName: `Sdílení konfigurace`,
+      featSharingDesc: `Export/import nastavení skupiny jako přenosný kód`,
+      howItWorks: `Jak to funguje`,
+      how1: `Bot se připojí k WhatsApp Web přes Baileys`,
+      how2: `Naslouchá zprávám ve všech skupinách, jejichž je členem`,
+      how3: `S oprávněním administrátora kontroluje zprávy na vulgarismy`,
+      how4: `Závadné zprávy jsou smazány a odesílatel dostane varování do DM`,
+      how5: `Administrátorské příkazy (předpona <code>?</code>) umožňují moderátorům varovat, vykopnout, zabanovat, ztlumit a konfigurovat bota`,
+      requirements: `Požadavky`,
+      req1: `Node.js 18+`,
+      req2: `WhatsApp účet (použitý jako číslo bota)`,
+      commandsTitle: `Příkazy`,
+      publicCommands: `Veřejné příkazy`,
+      publicHint: `Fungují pro kohokoli, ve skupinách i DM.`,
+      thCommand: `Příkaz`,
+      thDescription: `Popis`,
+      pub1: `Bot odpoví "Pong!"`,
+      pub2: `Zobrazí stav připojení a dobu běhu`,
+      pub3: `Zobrazí seznam veřejných příkazů`,
+      adminCommands: `Administrátorské příkazy`,
+      adminHint: `Vyžadují, aby měl bot ve skupině oprávnění administrátora. Používají předponu <code>?</code> a vyžadují @zmínění cílového uživatele.`,
+      admin1: `Varuje uživatele přes DM, zvýší počet varování`,
+      admin2: `Zobrazí historii varování uživatele`,
+      admin3: `Odebere uživatele ze skupiny`,
+      admin4: `Zabanuje uživatele (automaticky odmítne opětovné připojení)`,
+      admin5: `Zruší ban, povolí opětovné připojení`,
+      admin6: `Po dobu trvání automaticky maže zprávy uživatele`,
+      admin7: `Zruší ztlumení`,
+      admin8: `Přidá zakázané slovo specifické pro skupinu`,
+      admin9: `Odebere zakázané slovo specifické pro skupinu`,
+      admin10: `Smaže posledních n zpráv sledovaných botem`,
+      admin11: `Ignoruje uživatele (přeskočí moderaci a kontrolu vulgarismů)`,
+      admin12: `Přestane uživatele ignorovat`,
+      admin13: `Zobrazí statistiky moderace`,
+      admin14: `Zobrazí aktuální konfiguraci skupiny`,
+      admin15: `Zobrazí seznam administrátorských příkazů s dostupnými jazyky`,
+      configCommands: `Konfigurační příkazy`,
+      config1: `Nastaví jazyk bota pro tuto skupinu`,
+      config2: `Počet varování před automatickým trestem (výchozí: 3)`,
+      config3: `Trest po dosažení limitu varování`,
+      config4: `Přepne funkci anti-spam`,
+      config5: `Nastaví uvítací zprávu pro nové členy`,
+      config6: `Nastaví zprávu na rozloučenou pro odchozí členy`,
+      userHint: `Použijte <code>{user}</code> jako zástupný symbol pro jméno člena v uvítacích/rozloučkových zprávách.`,
+      exportImport: `Export a import`,
+      export1: `Vygeneruje kód s kompletní konfigurací skupiny`,
+      export2: `Aplikuje konfigurační kód na tuto skupinu`,
+      exportHint: `Vygenerujte kód v záložce <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Tvůrce konfigurace</a> a poté jej odešlete do libovolné skupiny příkazem <code>?import</code>.`,
+      autoModeration: `Automatická moderace`,
+      autoIntro: `Když bot detekuje vulgarismus ve zprávě, automaticky:`,
+      auto1: `Smaže zprávu`,
+      auto2: `Pošle odesílateli varování do DM`,
+      auto3: `Zaznamená varování`,
+      autoFinal: `Pokud uživatel dosáhne limitu varování (výchozí 3), je automaticky potrestán (ban/kick/mute) podle nastavení <code>warnPunish</code> skupiny.`,
+      languagesTitle: `Jazyky`,
+      languagesIntro: `Bot podporuje 8 jazyků. Jazyk se nastavuje <strong>pro každou skupinu</strong> a přetrvává mezi restarty.`,
+      thCode: `Kód`,
+      thLanguage: `Jazyk`,
+      tagDefault: `(výchozí)`,
+      settingLang: `Nastavení jazyka`,
+      settingLangP1: `Všechny zprávy bota v dané skupině použijí vybraný jazyk: varování za vulgarismy, odpovědi na administrátorské příkazy, zprávy automatické moderace, výstup stavu a nápovědy.`,
+      settingLangP2: `Pokud je použit nepodporovaný kód, bot odpoví seznamem platných kódů. Pokud jazyk není nastaven nebo chybí překladový klíč, použije se jako záloha angličtina.`,
+      configTitle: `Tvůrce konfigurace`,
+      importCodeTitle: `Import existujícího kódu`,
+      importCodeLabel: `Vložte kód (s nebo bez <code>?import</code>) pro další úpravy`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Načíst kód`,
+      importError: `Neplatný kód. Ujistěte se, že jde o platnou konfiguraci v base64.`,
+      configureTitle: `Nakonfigurujte svou skupinu`,
+      labelLang: `Jazyk`,
+      labelWarnLimit: `Limit varování (automatický trest po tolika varováních)`,
+      labelPunish: `Trest po dosažení limitu varování`,
+      labelMuteDuration: `Délka ztlumení (např. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Uvítací zpráva (<code>{user}</code> = jméno člena)`,
+      labelGoodbye: `Zpráva na rozloučenou (<code>{user}</code> = jméno člena)`,
+      labelCustomWords: `Vlastní zakázaná slova (jedno na řádek)`,
+      labelBanned: `Zabanovaní JID (jeden na řádek)`,
+      labelIgnored: `Ignorovaní JID (jeden na řádek)`,
+      genBtn: `Vygenerovat ?import kód`,
+      clearBtn: `Vyčistit formulář`,
+      importCommandLabel: `Import příkaz`,
+      copyCommandBtn: `Kopírovat příkaz`,
+      copyCodeBtn: `Kopírovat pouze kód`,
+      applyHint: `Pošlete příkaz <code>?import &lt;code&gt;</code> do své skupiny pro aplikaci této konfigurace.`,
+      toastCopied: `Zkopírováno do schránky`,
+      toastLoaded: `Kód načten`
+    },
+    es: {
+      siteTitle: `WA Mod Bot — Documentación y generador de configuración`,
+      tagline: `Documentación y generador de configuración en línea`,
+      uiLangLabel: `Idioma del sitio`,
+      navOverview: `Resumen`,
+      navCommands: `Comandos`,
+      navLanguages: `Idiomas`,
+      navConfig: `Generador de configuración`,
+      overviewTitle: `Resumen`,
+      overviewIntro: `Un bot de moderación de WhatsApp basado en <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Detecta groserías, avisa a los usuarios y ofrece herramientas de administración para gestionar grupos.`,
+      overviewHint: `En el primer inicio, escanea el código QR de tu terminal mediante <strong>WhatsApp → Dispositivos vinculados → Vincular un dispositivo</strong>. Las credenciales se guardan en <code>./auth/</code> y se reutilizan en los siguientes inicios.`,
+      coreFeatures: `Funciones principales`,
+      featProfanityName: `Detección de groserías`,
+      featProfanityDesc: `Más de 20 idiomas, normalización de leet speak, detección de evasiones con sufijos/prefijos`,
+      featWarningsName: `Sistema de avisos`,
+      featWarningsDesc: `Se sigue por usuario y castiga automáticamente al alcanzar el límite`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 mensajes en 5 segundos activan el silenciado automático`,
+      featBanName: `Aplicación de baneos`,
+      featBanDesc: `Expulsa automáticamente a los usuarios baneados si se vuelven a añadir y rechaza solicitudes de unión`,
+      featMultilangName: `Multilingüe`,
+      featMultilangDesc: `8 idiomas, ajuste por grupo`,
+      featCustomName: `Palabras prohibidas personalizadas`,
+      featCustomDesc: `Listas de palabras específicas del grupo`,
+      featWelcomeName: `Bienvenida y despedida`,
+      featWelcomeDesc: `Mensajes configurables para los miembros que entran/salen`,
+      featPersistenceName: `Persistencia`,
+      featPersistenceDesc: `Todos los datos sobreviven a los reinicios mediante archivos JSON en <code>./data/</code>`,
+      featSharingName: `Compartir configuración`,
+      featSharingDesc: `Exporta/importa los ajustes del grupo como código portátil`,
+      howItWorks: `Cómo funciona`,
+      how1: `El bot se conecta a WhatsApp Web mediante Baileys`,
+      how2: `Escucha los mensajes de todos los grupos de los que es miembro`,
+      how3: `Con privilegios de administrador, analiza los mensajes en busca de groserías`,
+      how4: `Los mensajes ofensivos se eliminan y el remitente recibe un aviso por DM`,
+      how5: `Los comandos de administración (prefijo <code>?</code>) permiten a los moderadores avisar, expulsar, banear, silenciar y configurar el bot`,
+      requirements: `Requisitos`,
+      req1: `Node.js 18+`,
+      req2: `Una cuenta de WhatsApp (usada como número del bot)`,
+      commandsTitle: `Comandos`,
+      publicCommands: `Comandos públicos`,
+      publicHint: `Funcionan para cualquiera, tanto en grupos como en DMs.`,
+      thCommand: `Comando`,
+      thDescription: `Descripción`,
+      pub1: `El bot responde "Pong!"`,
+      pub2: `Muestra el estado de la conexión y el tiempo de actividad`,
+      pub3: `Muestra la lista de comandos públicos`,
+      adminCommands: `Comandos de administración`,
+      adminHint: `Requieren que el bot tenga privilegios de administrador en el grupo. Usan el prefijo <code>?</code> y requieren @mencionar al usuario objetivo.`,
+      admin1: `Avisa al usuario por DM e incrementa el contador de avisos`,
+      admin2: `Muestra el historial de avisos del usuario`,
+      admin3: `Elimina al usuario del grupo`,
+      admin4: `Banea al usuario (rechaza automáticamente el reingreso)`,
+      admin5: `Elimina el baneo y permite el reingreso`,
+      admin6: `Elimina automáticamente los mensajes del usuario durante un tiempo`,
+      admin7: `Elimina el silenciado`,
+      admin8: `Añade una palabra prohibida específica del grupo`,
+      admin9: `Elimina una palabra prohibida específica del grupo`,
+      admin10: `Elimina los últimos n mensajes rastreados por el bot`,
+      admin11: `Ignora a un usuario (omite la moderación y la comprobación de groserías)`,
+      admin12: `Deja de ignorar a un usuario`,
+      admin13: `Muestra las estadísticas de moderación`,
+      admin14: `Muestra la configuración actual del grupo`,
+      admin15: `Muestra la lista de comandos de administración con los idiomas disponibles`,
+      configCommands: `Comandos de configuración`,
+      config1: `Establece el idioma del bot para este grupo`,
+      config2: `Avisos antes del castigo automático (por defecto: 3)`,
+      config3: `Castigo al alcanzar el límite de avisos`,
+      config4: `Activa/desactiva la función anti-spam`,
+      config5: `Establece el mensaje de bienvenida para los nuevos miembros`,
+      config6: `Establece el mensaje de despedida para los miembros que salen`,
+      userHint: `Usa <code>{user}</code> como marcador del nombre del miembro en los mensajes de bienvenida/despedida.`,
+      exportImport: `Exportar e importar`,
+      export1: `Genera un código con la configuración completa del grupo`,
+      export2: `Aplica un código de configuración a este grupo`,
+      exportHint: `Genera un código en la pestaña <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Generador de configuración</a> y envíalo a cualquier grupo con <code>?import</code>.`,
+      autoModeration: `Moderación automática`,
+      autoIntro: `Cuando el bot detecta una grosería en un mensaje, automáticamente:`,
+      auto1: `Elimina el mensaje`,
+      auto2: `Envía un aviso al remitente por DM`,
+      auto3: `Registra el aviso`,
+      autoFinal: `Si un usuario alcanza el límite de avisos (por defecto 3), se le castiga automáticamente (ban/kick/mute) según el ajuste <code>warnPunish</code> del grupo.`,
+      languagesTitle: `Idiomas`,
+      languagesIntro: `El bot admite 8 idiomas. El idioma se establece <strong>por grupo</strong> y persiste entre reinicios.`,
+      thCode: `Código`,
+      thLanguage: `Idioma`,
+      tagDefault: `(por defecto)`,
+      settingLang: `Establecer un idioma`,
+      settingLangP1: `Todos los mensajes del bot en ese grupo usarán el idioma elegido: avisos de groserías, respuestas a comandos de administración, mensajes de moderación automática, salida de estado y ayuda.`,
+      settingLangP2: `Si se usa un código no admitido, el bot responde con la lista de códigos válidos. Si no se ha definido ningún idioma o falta una clave de traducción, se usa el inglés como respaldo.`,
+      configTitle: `Generador de configuración`,
+      importCodeTitle: `Importar un código existente`,
+      importCodeLabel: `Pega un código (con o sin <code>?import</code>) para editarlo más`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Cargar código`,
+      importError: `Código no válido. Asegúrate de que sea una configuración base64 válida.`,
+      configureTitle: `Configura tu grupo`,
+      labelLang: `Idioma`,
+      labelWarnLimit: `Límite de avisos (castigo automático tras este número de avisos)`,
+      labelPunish: `Castigo al alcanzar el límite de avisos`,
+      labelMuteDuration: `Duración del silenciado (p. ej. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Mensaje de bienvenida (<code>{user}</code> = nombre del miembro)`,
+      labelGoodbye: `Mensaje de despedida (<code>{user}</code> = nombre del miembro)`,
+      labelCustomWords: `Palabras prohibidas personalizadas (una por línea)`,
+      labelBanned: `JIDs baneados (uno por línea)`,
+      labelIgnored: `JIDs ignorados (uno por línea)`,
+      genBtn: `Generar código ?import`,
+      clearBtn: `Limpiar formulario`,
+      importCommandLabel: `Comando de importación`,
+      copyCommandBtn: `Copiar comando`,
+      copyCodeBtn: `Copiar solo el código`,
+      applyHint: `Envía el comando <code>?import &lt;code&gt;</code> en tu grupo para aplicar esta configuración.`,
+      toastCopied: `Copiado al portapapeles`,
+      toastLoaded: `Código cargado`
+    },
+    de: {
+      siteTitle: `WA Mod Bot — Dokumentation und Konfigurations-Generator`,
+      tagline: `Dokumentation und Online-Konfigurationsgenerator`,
+      uiLangLabel: `Sprache der Website`,
+      navOverview: `Übersicht`,
+      navCommands: `Befehle`,
+      navLanguages: `Sprachen`,
+      navConfig: `Konfigurations-Generator`,
+      overviewTitle: `Übersicht`,
+      overviewIntro: `Ein WhatsApp-Moderationsbot auf Basis von <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Er erkennt Schimpfwörter, verwarnt Nutzer und bietet Admin-Werkzeuge zur Gruppenverwaltung.`,
+      overviewHint: `Beim ersten Start den QR-Code im Terminal scannen über <strong>WhatsApp → Verknüpfte Geräte → Gerät verknüpfen</strong>. Anmeldedaten werden unter <code>./auth/</code> gespeichert und bei späteren Starts wiederverwendet.`,
+      coreFeatures: `Kernfunktionen`,
+      featProfanityName: `Schimpfwort-Erkennung`,
+      featProfanityDesc: `20+ Sprachen, Leetspeak-Normalisierung, Erkennung von Präfix-/Suffix-Umgehungen`,
+      featWarningsName: `Verwarnsystem`,
+      featWarningsDesc: `Pro Nutzer erfasst, bestraft automatisch nach Erreichen des Limits`,
+      featAntispamName: `Anti-Spam`,
+      featAntispamDesc: `5 Nachrichten in 5 Sekunden lösen automatisches Stummschalten aus`,
+      featBanName: `Ban-Durchsetzung`,
+      featBanDesc: `Wirft gebannte Nutzer bei erneutem Hinzufügen automatisch hinaus, lehnt Beitrittsanfragen ab`,
+      featMultilangName: `Mehrsprachig`,
+      featMultilangDesc: `8 Sprachen, Einstellung pro Gruppe`,
+      featCustomName: `Eigene Schimpfwörter`,
+      featCustomDesc: `Gruppenspezifische Wortlisten`,
+      featWelcomeName: `Begrüßung & Abschied`,
+      featWelcomeDesc: `Konfigurierbare Nachrichten für beitretende/verlassende Mitglieder`,
+      featPersistenceName: `Persistenz`,
+      featPersistenceDesc: `Alle Daten überstehen Neustarts über JSON-Dateien in <code>./data/</code>`,
+      featSharingName: `Konfigurationsfreigabe`,
+      featSharingDesc: `Gruppeneinstellungen als portablen Code exportieren/importieren`,
+      howItWorks: `So funktioniert es`,
+      how1: `Der Bot verbindet sich über Baileys mit WhatsApp Web`,
+      how2: `Er hört auf Nachrichten in allen Gruppen, in denen er Mitglied ist`,
+      how3: `Mit Admin-Rechten scannt er Nachrichten auf Schimpfwörter`,
+      how4: `Verstoßende Nachrichten werden gelöscht und der Absender erhält eine DM-Verwarnung`,
+      how5: `Admin-Befehle (Präfix <code>?</code>) erlauben Moderatoren zu verwarnen, zu kicken, zu bannen, stummzuschalten und den Bot zu konfigurieren`,
+      requirements: `Voraussetzungen`,
+      req1: `Node.js 18+`,
+      req2: `Ein WhatsApp-Konto (als Nummer des Bots verwendet)`,
+      commandsTitle: `Befehle`,
+      publicCommands: `Öffentliche Befehle`,
+      publicHint: `Diese funktionieren für jeden, in Gruppen und DMs.`,
+      thCommand: `Befehl`,
+      thDescription: `Beschreibung`,
+      pub1: `Der Bot antwortet mit "Pong!"`,
+      pub2: `Zeigt Verbindungsstatus und Laufzeit`,
+      pub3: `Zeigt die Liste der öffentlichen Befehle`,
+      adminCommands: `Admin-Befehle`,
+      adminHint: `Diese erfordern Admin-Rechte des Bots in der Gruppe. Sie verwenden das Präfix <code>?</code> und erfordern das @Erwähnen des Zielnutzers.`,
+      admin1: `Verwarnt Nutzer per DM, erhöht den Verwarnzähler`,
+      admin2: `Zeigt die Verwarnhistorie des Nutzers`,
+      admin3: `Entfernt den Nutzer aus der Gruppe`,
+      admin4: `Bannt den Nutzer (lehnt erneuten Beitritt automatisch ab)`,
+      admin5: `Hebt den Ban auf und erlaubt erneuten Beitritt`,
+      admin6: `Löscht Nachrichten des Nutzers automatisch für die Dauer`,
+      admin7: `Hebt die Stummschaltung auf`,
+      admin8: `Fügt ein gruppenspezifisches Schimpfwort hinzu`,
+      admin9: `Entfernt ein gruppenspezifisches Schimpfwort`,
+      admin10: `Löscht die letzten n vom Bot erfassten Nachrichten`,
+      admin11: `Ignoriert einen Nutzer (überspringt Moderation und Schimpfwortprüfung)`,
+      admin12: `Beendet das Ignorieren eines Nutzers`,
+      admin13: `Zeigt Moderationsstatistiken`,
+      admin14: `Zeigt die aktuelle Gruppenkonfiguration`,
+      admin15: `Zeigt die Admin-Befehlsliste mit verfügbaren Sprachen`,
+      configCommands: `Konfigurationsbefehle`,
+      config1: `Legt die Sprache des Bots für diese Gruppe fest`,
+      config2: `Verwarnungen vor automatischer Bestrafung (Standard: 3)`,
+      config3: `Bestrafung bei Erreichen des Verwarnlimits`,
+      config4: `Schaltet die Anti-Spam-Funktion um`,
+      config5: `Legt die Begrüßungsnachricht für neue Mitglieder fest`,
+      config6: `Legt die Abschiedsnachricht für verlassende Mitglieder fest`,
+      userHint: `Verwende <code>{user}</code> als Platzhalter für den Namen des Mitglieds in Begrüßungs-/Abschiedsnachrichten.`,
+      exportImport: `Export & Import`,
+      export1: `Erzeugt einen Code mit der vollständigen Gruppenkonfiguration`,
+      export2: `Wendet einen Konfigurationscode auf diese Gruppe an`,
+      exportHint: `Erzeuge einen Code im Tab <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Konfigurations-Generator</a> und sende ihn dann mit <code>?import</code> in eine beliebige Gruppe.`,
+      autoModeration: `Automatische Moderation`,
+      autoIntro: `Wenn der Bot ein Schimpfwort in einer Nachricht erkennt, wird automatisch:`,
+      auto1: `Die Nachricht gelöscht`,
+      auto2: `Dem Absender eine DM-Verwarnung gesendet`,
+      auto3: `Die Verwarnung aufgezeichnet`,
+      autoFinal: `Erreicht ein Nutzer das Verwarnlimit (Standard 3), wird er entsprechend der <code>warnPunish</code>-Einstellung der Gruppe automatisch bestraft (ban/kick/mute).`,
+      languagesTitle: `Sprachen`,
+      languagesIntro: `Der Bot unterstützt 8 Sprachen. Die Sprache wird <strong>pro Gruppe</strong> festgelegt und bleibt über Neustarts erhalten.`,
+      thCode: `Code`,
+      thLanguage: `Sprache`,
+      tagDefault: `(Standard)`,
+      settingLang: `Sprache festlegen`,
+      settingLangP1: `Alle Bot-Nachrichten in dieser Gruppe verwenden die gewählte Sprache: Schimpfwort-Verwarnungen, Antworten auf Admin-Befehle, Automoderations-Nachrichten sowie Status- und Hilfeausgaben.`,
+      settingLangP2: `Bei einem nicht unterstützten Code antwortet der Bot mit der Liste gültiger Codes. Ist keine Sprache festgelegt oder fehlt ein Übersetzungsschlüssel, wird Englisch als Fallback verwendet.`,
+      configTitle: `Konfigurations-Generator`,
+      importCodeTitle: `Vorhandenen Code importieren`,
+      importCodeLabel: `Füge einen Code ein (mit oder ohne <code>?import</code>), um ihn weiter zu bearbeiten`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Code laden`,
+      importError: `Ungültiger Code. Stelle sicher, dass es eine gültige base64-Konfiguration ist.`,
+      configureTitle: `Deine Gruppe konfigurieren`,
+      labelLang: `Sprache`,
+      labelWarnLimit: `Verwarnlimit (automatische Bestrafung nach so vielen Verwarnungen)`,
+      labelPunish: `Bestrafung bei Erreichen des Verwarnlimits`,
+      labelMuteDuration: `Stummschaltungsdauer (z. B. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-Spam`,
+      labelWelcome: `Begrüßungsnachricht (<code>{user}</code> = Name des Mitglieds)`,
+      labelGoodbye: `Abschiedsnachricht (<code>{user}</code> = Name des Mitglieds)`,
+      labelCustomWords: `Eigene Schimpfwörter (eines pro Zeile)`,
+      labelBanned: `Gebannte JIDs (eine pro Zeile)`,
+      labelIgnored: `Ignorierte JIDs (eine pro Zeile)`,
+      genBtn: `?import-Code generieren`,
+      clearBtn: `Formular leeren`,
+      importCommandLabel: `Importbefehl`,
+      copyCommandBtn: `Befehl kopieren`,
+      copyCodeBtn: `Nur Code kopieren`,
+      applyHint: `Sende den Befehl <code>?import &lt;code&gt;</code> in deine Gruppe, um diese Konfiguration anzuwenden.`,
+      toastCopied: `In die Zwischenablage kopiert`,
+      toastLoaded: `Code geladen`
+    },
+    fr: {
+      siteTitle: `WA Mod Bot — Documentation et générateur de configuration`,
+      tagline: `Documentation et générateur de configuration en ligne`,
+      uiLangLabel: `Langue du site`,
+      navOverview: `Aperçu`,
+      navCommands: `Commandes`,
+      navLanguages: `Langues`,
+      navConfig: `Générateur`,
+      overviewTitle: `Aperçu`,
+      overviewIntro: `Un bot de modération WhatsApp basé sur <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Il détecte les grossièretés, avertit les utilisateurs et fournit des outils d'administration pour la gestion de groupe.`,
+      overviewHint: `Lors du premier lancement, scannez le QR code dans le terminal via <strong>WhatsApp → Appareils liés → Lier un appareil</strong>. Les identifiants sont enregistrés dans <code>./auth/</code> et réutilisés lors des démarrages suivants.`,
+      coreFeatures: `Fonctionnalités principales`,
+      featProfanityName: `Détection de grossièretés`,
+      featProfanityDesc: `Plus de 20 langues, normalisation du leet speak, détection des contournements par préfixes/suffixes`,
+      featWarningsName: `Système d'avertissements`,
+      featWarningsDesc: `Suivi par utilisateur, punit automatiquement après avoir atteint la limite`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 messages en 5 secondes déclenchent une mise en sourdine automatique`,
+      featBanName: `Application des bannissements`,
+      featBanDesc: `Expulse automatiquement les utilisateurs bannis s'ils sont ré-ajoutés, rejette les demandes d'adhésion`,
+      featMultilangName: `Multilingue`,
+      featMultilangDesc: `8 langues, réglage par groupe`,
+      featCustomName: `Mots interdits personnalisés`,
+      featCustomDesc: `Listes de mots spécifiques au groupe`,
+      featWelcomeName: `Bienvenue et au revoir`,
+      featWelcomeDesc: `Messages configurables pour les membres qui arrivent/partent`,
+      featPersistenceName: `Persistance`,
+      featPersistenceDesc: `Toutes les données survivent aux redémarrages grâce aux fichiers JSON dans <code>./data/</code>`,
+      featSharingName: `Partage de configuration`,
+      featSharingDesc: `Exporter/importer les paramètres de groupe sous forme de code portable`,
+      howItWorks: `Fonctionnement`,
+      how1: `Le bot se connecte à WhatsApp Web via Baileys`,
+      how2: `Il écoute les messages dans tous les groupes dont il est membre`,
+      how3: `Avec les droits d'administrateur, il analyse les messages à la recherche de grossièretés`,
+      how4: `Les messages fautifs sont supprimés et l'expéditeur reçoit un avertissement en MP`,
+      how5: `Les commandes d'administration (préfixe <code>?</code>) permettent aux modérateurs d'avertir, d'expulser, de bannir, de mettre en sourdine et de configurer le bot`,
+      requirements: `Prérequis`,
+      req1: `Node.js 18+`,
+      req2: `Un compte WhatsApp (utilisé comme numéro du bot)`,
+      commandsTitle: `Commandes`,
+      publicCommands: `Commandes publiques`,
+      publicHint: `Elles fonctionnent pour tous, dans les groupes et en MP.`,
+      thCommand: `Commande`,
+      thDescription: `Description`,
+      pub1: `Le bot répond « Pong ! »`,
+      pub2: `Affiche l'état de la connexion et la durée de fonctionnement`,
+      pub3: `Affiche la liste des commandes publiques`,
+      adminCommands: `Commandes d'administration`,
+      adminHint: `Elles nécessitent que le bot ait des privilèges d'administrateur dans le groupe. Elles utilisent le préfixe <code>?</code> et requièrent la @mention de l'utilisateur cible.`,
+      admin1: `Avertit l'utilisateur en MP, incrémente le compteur d'avertissements`,
+      admin2: `Affiche l'historique des avertissements de l'utilisateur`,
+      admin3: `Retire l'utilisateur du groupe`,
+      admin4: `Bannit l'utilisateur (rejette automatiquement la ré-adhésion)`,
+      admin5: `Lève le bannissement, permettant la ré-adhésion`,
+      admin6: `Supprime automatiquement les messages de l'utilisateur pendant la durée`,
+      admin7: `Lève la mise en sourdine`,
+      admin8: `Ajoute un mot interdit spécifique au groupe`,
+      admin9: `Retire un mot interdit spécifique au groupe`,
+      admin10: `Supprime les n derniers messages suivis par le bot`,
+      admin11: `Ignore un utilisateur (saute la modération et la vérification des grossièretés)`,
+      admin12: `Arrête d'ignorer un utilisateur`,
+      admin13: `Affiche les statistiques de modération`,
+      admin14: `Affiche la configuration actuelle du groupe`,
+      admin15: `Affiche la liste des commandes d'administration avec les langues disponibles`,
+      configCommands: `Commandes de configuration`,
+      config1: `Définit la langue du bot pour ce groupe`,
+      config2: `Avertissements avant punition automatique (défaut : 3)`,
+      config3: `Punition à l'atteinte de la limite d'avertissements`,
+      config4: `Active/désactive la fonction anti-spam`,
+      config5: `Définit le message de bienvenue pour les nouveaux membres`,
+      config6: `Définit le message d'au revoir pour les membres qui partent`,
+      userHint: `Utilisez <code>{user}</code> comme espace réservé pour le nom du membre dans les messages de bienvenue/d'au revoir.`,
+      exportImport: `Export et import`,
+      export1: `Génère un code avec la configuration complète du groupe`,
+      export2: `Applique un code de configuration à ce groupe`,
+      exportHint: `Générez un code dans l'onglet <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Générateur</a>, puis envoyez-le dans n'importe quel groupe avec <code>?import</code>.`,
+      autoModeration: `Modération automatique`,
+      autoIntro: `Lorsque le bot détecte une grossièreté dans un message, il :`,
+      auto1: `Supprime le message`,
+      auto2: `Envoie un avertissement à l'expéditeur en MP`,
+      auto3: `Enregistre l'avertissement`,
+      autoFinal: `Si un utilisateur atteint la limite d'avertissements (défaut 3), il est puni automatiquement (ban/kick/mute) selon le paramètre <code>warnPunish</code> du groupe.`,
+      languagesTitle: `Langues`,
+      languagesIntro: `Le bot prend en charge 8 langues. La langue est définie <strong>par groupe</strong> et persiste entre les redémarrages.`,
+      thCode: `Code`,
+      thLanguage: `Langue`,
+      tagDefault: `(défaut)`,
+      settingLang: `Définir une langue`,
+      settingLangP1: `Tous les messages du bot dans ce groupe utiliseront la langue choisie : avertissements de grossièretés, réponses aux commandes d'administration, messages de modération automatique, sorties d'état et d'aide.`,
+      settingLangP2: `Si un code non pris en charge est utilisé, le bot répond avec la liste des codes valides. Si aucune langue n'est définie ou si une clé de traduction manque, l'anglais est utilisé comme secours.`,
+      configTitle: `Générateur de configuration`,
+      importCodeTitle: `Importer un code existant`,
+      importCodeLabel: `Collez un code (avec ou sans <code>?import</code>) pour le modifier davantage`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Charger le code`,
+      importError: `Code invalide. Assurez-vous qu'il s'agit d'une configuration base64 valide.`,
+      configureTitle: `Configurer votre groupe`,
+      labelLang: `Langue`,
+      labelWarnLimit: `Limite d'avertissements (punition automatique après ce nombre d'avertissements)`,
+      labelPunish: `Punition à l'atteinte de la limite d'avertissements`,
+      labelMuteDuration: `Durée de mise en sourdine (ex. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Message de bienvenue (<code>{user}</code> = nom du membre)`,
+      labelGoodbye: `Message d'au revoir (<code>{user}</code> = nom du membre)`,
+      labelCustomWords: `Mots interdits personnalisés (un par ligne)`,
+      labelBanned: `JID bannis (un par ligne)`,
+      labelIgnored: `JID ignorés (un par ligne)`,
+      genBtn: `Générer le code ?import`,
+      clearBtn: `Effacer le formulaire`,
+      importCommandLabel: `Commande d'import`,
+      copyCommandBtn: `Copier la commande`,
+      copyCodeBtn: `Copier le code seul`,
+      applyHint: `Envoyez la commande <code>?import &lt;code&gt;</code> dans votre groupe pour appliquer cette configuration.`,
+      toastCopied: `Copié dans le presse-papiers`,
+      toastLoaded: `Code chargé`
+    },
+    pt: {
+      siteTitle: `WA Mod Bot — Documentação e gerador de configuração`,
+      tagline: `Documentação e gerador de configuração online`,
+      uiLangLabel: `Idioma do site`,
+      navOverview: `Visão geral`,
+      navCommands: `Comandos`,
+      navLanguages: `Idiomas`,
+      navConfig: `Gerador de configuração`,
+      overviewTitle: `Visão geral`,
+      overviewIntro: `Um bot de moderação do WhatsApp baseado em <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Detecta palavrões, avisa usuários e oferece ferramentas de administração para gerenciamento de grupos.`,
+      overviewHint: `Na primeira execução, escaneie o QR code no terminal via <strong>WhatsApp → Aparelhos conectados → Conectar um aparelho</strong>. As credenciais são salvas em <code>./auth/</code> e reutilizadas nas execuções seguintes.`,
+      coreFeatures: `Recursos principais`,
+      featProfanityName: `Detecção de palavrões`,
+      featProfanityDesc: `Mais de 20 idiomas, normalização de leet speak, detecção de evasão por sufixos/prefixos`,
+      featWarningsName: `Sistema de avisos`,
+      featWarningsDesc: `Rastreado por usuário, pune automaticamente ao atingir o limite`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 mensagens em 5 segundos ativam o silenciamento automático`,
+      featBanName: `Aplicação de banimentos`,
+      featBanDesc: `Remove automaticamente usuários banidos se readicionados, rejeita pedidos de entrada`,
+      featMultilangName: `Multi-idioma`,
+      featMultilangDesc: `8 idiomas, configuração por grupo`,
+      featCustomName: `Palavrões personalizados`,
+      featCustomDesc: `Listas de palavras específicas do grupo`,
+      featWelcomeName: `Boas-vindas e despedida`,
+      featWelcomeDesc: `Mensagens configuráveis para membros que entram/saem`,
+      featPersistenceName: `Persistência`,
+      featPersistenceDesc: `Todos os dados sobrevivem a reinicializações via arquivos JSON em <code>./data/</code>`,
+      featSharingName: `Compartilhamento de configuração`,
+      featSharingDesc: `Exporta/importa configurações do grupo como código portátil`,
+      howItWorks: `Como funciona`,
+      how1: `O bot se conecta ao WhatsApp Web via Baileys`,
+      how2: `Ele ouve mensagens em todos os grupos dos quais é membro`,
+      how3: `Com privilégios de administrador, ele verifica as mensagens em busca de palavrões`,
+      how4: `Mensagens ofensivas são excluídas e o remetente recebe um aviso por DM`,
+      how5: `Comandos de administração (prefixo <code>?</code>) permitem que moderadores avisem, expulsem, banam, silenciem e configurem o bot`,
+      requirements: `Requisitos`,
+      req1: `Node.js 18+`,
+      req2: `Uma conta do WhatsApp (usada como número do bot)`,
+      commandsTitle: `Comandos`,
+      publicCommands: `Comandos públicos`,
+      publicHint: `Funcionam para qualquer pessoa, em grupos e DMs.`,
+      thCommand: `Comando`,
+      thDescription: `Descrição`,
+      pub1: `O bot responde com "Pong!"`,
+      pub2: `Mostra o status da conexão e o tempo de atividade`,
+      pub3: `Mostra a lista de comandos públicos`,
+      adminCommands: `Comandos de administração`,
+      adminHint: `Exigem que o bot tenha privilégios de administrador no grupo. Usam o prefixo <code>?</code> e exigem @mencionar o usuário alvo.`,
+      admin1: `Avisa o usuário por DM, incrementa a contagem de avisos`,
+      admin2: `Mostra o histórico de avisos do usuário`,
+      admin3: `Remove o usuário do grupo`,
+      admin4: `Bane o usuário (rejeita automaticamente a reentrada)`,
+      admin5: `Remove o banimento, permitindo a reentrada`,
+      admin6: `Exclui automaticamente as mensagens do usuário durante o período`,
+      admin7: `Remove o silenciamento`,
+      admin8: `Adiciona um palavrão específico do grupo`,
+      admin9: `Remove um palavrão específico do grupo`,
+      admin10: `Exclui as últimas n mensagens rastreadas pelo bot`,
+      admin11: `Ignora um usuário (pula a moderação e a verificação de palavrões)`,
+      admin12: `Para de ignorar um usuário`,
+      admin13: `Mostra estatísticas de moderação`,
+      admin14: `Mostra a configuração atual do grupo`,
+      admin15: `Mostra a lista de comandos de administração com os idiomas disponíveis`,
+      configCommands: `Comandos de configuração`,
+      config1: `Define o idioma do bot para este grupo`,
+      config2: `Avisos antes da punição automática (padrão: 3)`,
+      config3: `Punição ao atingir o limite de avisos`,
+      config4: `Ativa/desativa o recurso anti-spam`,
+      config5: `Define a mensagem de boas-vindas para novos membros`,
+      config6: `Define a mensagem de despedida para membros que saem`,
+      userHint: `Use <code>{user}</code> como espaço reservado para o nome do membro nas mensagens de boas-vindas/despedida.`,
+      exportImport: `Exportar e importar`,
+      export1: `Gera um código com a configuração completa do grupo`,
+      export2: `Aplica um código de configuração a este grupo`,
+      exportHint: `Gere um código na aba <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Gerador de configuração</a> e envie-o em qualquer grupo com <code>?import</code>.`,
+      autoModeration: `Moderação automática`,
+      autoIntro: `Quando o bot detecta um palavrão em uma mensagem, ele automaticamente:`,
+      auto1: `Exclui a mensagem`,
+      auto2: `Envia um aviso ao remetente por DM`,
+      auto3: `Registra o aviso`,
+      autoFinal: `Se um usuário atingir o limite de avisos (padrão 3), ele é punido automaticamente (ban/kick/mute) de acordo com a configuração <code>warnPunish</code> do grupo.`,
+      languagesTitle: `Idiomas`,
+      languagesIntro: `O bot suporta 8 idiomas. O idioma é definido <strong>por grupo</strong> e persiste entre reinicializações.`,
+      thCode: `Código`,
+      thLanguage: `Idioma`,
+      tagDefault: `(padrão)`,
+      settingLang: `Definir um idioma`,
+      settingLangP1: `Todas as mensagens do bot nesse grupo usarão o idioma selecionado: avisos de palavrões, respostas a comandos de administração, mensagens de moderação automática, saídas de status e ajuda.`,
+      settingLangP2: `Se um código não suportado for usado, o bot responde com a lista de códigos válidos. Se nenhum idioma estiver definido ou uma chave de tradução estiver ausente, o inglês é usado como fallback.`,
+      configTitle: `Gerador de configuração`,
+      importCodeTitle: `Importar um código existente`,
+      importCodeLabel: `Cole um código (com ou sem <code>?import</code>) para editá-lo ainda mais`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Carregar código`,
+      importError: `Código inválido. Certifique-se de que é uma configuração base64 válida.`,
+      configureTitle: `Configure seu grupo`,
+      labelLang: `Idioma`,
+      labelWarnLimit: `Limite de avisos (punição automática após este número de avisos)`,
+      labelPunish: `Punição ao atingir o limite de avisos`,
+      labelMuteDuration: `Duração do silenciamento (ex.: 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Mensagem de boas-vindas (<code>{user}</code> = nome do membro)`,
+      labelGoodbye: `Mensagem de despedida (<code>{user}</code> = nome do membro)`,
+      labelCustomWords: `Palavrões personalizados (um por linha)`,
+      labelBanned: `JIDs banidos (um por linha)`,
+      labelIgnored: `JIDs ignorados (um por linha)`,
+      genBtn: `Gerar código ?import`,
+      clearBtn: `Limpar formulário`,
+      importCommandLabel: `Comando de importação`,
+      copyCommandBtn: `Copiar comando`,
+      copyCodeBtn: `Copiar apenas o código`,
+      applyHint: `Envie o comando <code>?import &lt;code&gt;</code> no seu grupo para aplicar esta configuração.`,
+      toastCopied: `Copiado para a área de transferência`,
+      toastLoaded: `Código carregado`
+    },
+    ru: {
+      siteTitle: `WA Mod Bot — Документация и конструктор конфигурации`,
+      tagline: `Документация и онлайн-конструктор конфигурации`,
+      uiLangLabel: `Язык сайта`,
+      navOverview: `Обзор`,
+      navCommands: `Команды`,
+      navLanguages: `Языки`,
+      navConfig: `Конструктор конфигурации`,
+      overviewTitle: `Обзор`,
+      overviewIntro: `Бот модерации WhatsApp на базе <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Обнаруживает нецензурную лексику, предупреждает пользователей и предоставляет инструменты администрирования для управления группами.`,
+      overviewHint: `При первом запуске отсканируйте QR-код в терминале через <strong>WhatsApp → Связанные устройства → Связать устройство</strong>. Учётные данные сохраняются в <code>./auth/</code> и используются повторно при последующих запусках.`,
+      coreFeatures: `Основные функции`,
+      featProfanityName: `Обнаружение нецензурной лексики`,
+      featProfanityDesc: `Более 20 языков, нормализация leet-speak, распознавание обхода через суффиксы/префиксы`,
+      featWarningsName: `Система предупреждений`,
+      featWarningsDesc: `Отслеживается для каждого пользователя, автоматически наказывает после достижения лимита`,
+      featAntispamName: `Анти-спам`,
+      featAntispamDesc: `5 сообщений за 5 секунд запускают автоматическое отключение звука`,
+      featBanName: `Контроль банов`,
+      featBanDesc: `Автоматически исключает забаненных пользователей при повторном добавлении, отклоняет запросы на вступление`,
+      featMultilangName: `Многоязычность`,
+      featMultilangDesc: `8 языков, настройка для каждой группы`,
+      featCustomName: `Свои запрещённые слова`,
+      featCustomDesc: `Списки слов, специфичные для группы`,
+      featWelcomeName: `Приветствие и прощание`,
+      featWelcomeDesc: `Настраиваемые сообщения для входящих/уходящих участников`,
+      featPersistenceName: `Постоянство данных`,
+      featPersistenceDesc: `Все данные сохраняются после перезапуска благодаря JSON-файлам в <code>./data/</code>`,
+      featSharingName: `Обмен конфигурацией`,
+      featSharingDesc: `Экспорт/импорт настроек группы в виде переносимого кода`,
+      howItWorks: `Как это работает`,
+      how1: `Бот подключается к WhatsApp Web через Baileys`,
+      how2: `Он слушает сообщения во всех группах, участником которых является`,
+      how3: `С правами администратора он проверяет сообщения на нецензурную лексику`,
+      how4: `Нарушающие сообщения удаляются, а отправитель получает предупреждение в личные сообщения`,
+      how5: `Команды администрирования (префикс <code>?</code>) позволяют модераторам предупреждать, исключать, банить, отключать звук и настраивать бота`,
+      requirements: `Требования`,
+      req1: `Node.js 18+`,
+      req2: `Учётная запись WhatsApp (используется как номер бота)`,
+      commandsTitle: `Команды`,
+      publicCommands: `Публичные команды`,
+      publicHint: `Работают для всех, в группах и личных сообщениях.`,
+      thCommand: `Команда`,
+      thDescription: `Описание`,
+      pub1: `Бот отвечает «Понг!»`,
+      pub2: `Показывает состояние подключения и время работы`,
+      pub3: `Показывает список публичных команд`,
+      adminCommands: `Команды администратора`,
+      adminHint: `Требуют прав администратора у бота в группе. Используют префикс <code>?</code> и требуют @упоминания целевого пользователя.`,
+      admin1: `Предупреждает пользователя в личном сообщении, увеличивает счётчик предупреждений`,
+      admin2: `Показывает историю предупреждений пользователя`,
+      admin3: `Удаляет пользователя из группы`,
+      admin4: `Банит пользователя (автоматически отклоняет повторное вступление)`,
+      admin5: `Снимает бан, разрешая повторное вступление`,
+      admin6: `Автоматически удаляет сообщения пользователя на время`,
+      admin7: `Снимает отключение звука`,
+      admin8: `Добавляет запрещённое слово, специфичное для группы`,
+      admin9: `Удаляет запрещённое слово, специфичное для группы`,
+      admin10: `Удаляет последние n сообщений, отслеживаемых ботом`,
+      admin11: `Игнорирует пользователя (пропускает модерацию и проверку лексики)`,
+      admin12: `Прекращает игнорировать пользователя`,
+      admin13: `Показывает статистику модерации`,
+      admin14: `Показывает текущую конфигурацию группы`,
+      admin15: `Показывает список команд администратора с доступными языками`,
+      configCommands: `Команды конфигурации`,
+      config1: `Устанавливает язык бота для этой группы`,
+      config2: `Предупреждений до автоматического наказания (по умолчанию: 3)`,
+      config3: `Наказание при достижении лимита предупреждений`,
+      config4: `Переключает функцию анти-спам`,
+      config5: `Устанавливает приветственное сообщение для новых участников`,
+      config6: `Устанавливает прощальное сообщение для уходящих участников`,
+      userHint: `Используйте <code>{user}</code> как заполнитель имени участника в приветственных/прощальных сообщениях.`,
+      exportImport: `Экспорт и импорт`,
+      export1: `Генерирует код с полной конфигурацией группы`,
+      export2: `Применяет код конфигурации к этой группе`,
+      exportHint: `Сгенерируйте код на вкладке <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Конструктор конфигурации</a>, затем отправьте его в любую группу с помощью <code>?import</code>.`,
+      autoModeration: `Автоматическая модерация`,
+      autoIntro: `Когда бот обнаруживает нецензурную лексику в сообщении, он автоматически:`,
+      auto1: `Удаляет сообщение`,
+      auto2: `Отправляет отправителю предупреждение в личные сообщения`,
+      auto3: `Записывает предупреждение`,
+      autoFinal: `Если пользователь достигает лимита предупреждений (по умолчанию 3), он автоматически наказывается (ban/kick/mute) согласно настройке <code>warnPunish</code> группы.`,
+      languagesTitle: `Языки`,
+      languagesIntro: `Бот поддерживает 8 языков. Язык задаётся <strong>для каждой группы</strong> и сохраняется между перезапусками.`,
+      thCode: `Код`,
+      thLanguage: `Язык`,
+      tagDefault: `(по умолчанию)`,
+      settingLang: `Установка языка`,
+      settingLangP1: `Все сообщения бота в этой группе будут использовать выбранный язык: предупреждения о нецензурной лексике, ответы на команды администратора, сообщения автоматической модерации, вывод статуса и справки.`,
+      settingLangP2: `Если используется неподдерживаемый код, бот отвечает списком допустимых кодов. Если язык не задан или отсутствует ключ перевода, в качестве запасного используется английский.`,
+      configTitle: `Конструктор конфигурации`,
+      importCodeTitle: `Импорт существующего кода`,
+      importCodeLabel: `Вставьте код (с <code>?import</code> или без), чтобы редактировать его дальше`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Загрузить код`,
+      importError: `Неверный код. Убедитесь, что это корректная конфигурация base64.`,
+      configureTitle: `Настройте свою группу`,
+      labelLang: `Язык`,
+      labelWarnLimit: `Лимит предупреждений (автоматическое наказание после такого числа предупреждений)`,
+      labelPunish: `Наказание при достижении лимита предупреждений`,
+      labelMuteDuration: `Длительность отключения звука (напр. 5m, 30s, 1d)`,
+      labelAntiSpam: `Анти-спам`,
+      labelWelcome: `Приветственное сообщение (<code>{user}</code> = имя участника)`,
+      labelGoodbye: `Прощальное сообщение (<code>{user}</code> = имя участника)`,
+      labelCustomWords: `Свои запрещённые слова (по одному в строке)`,
+      labelBanned: `Забаненные JID (по одному в строке)`,
+      labelIgnored: `Игнорируемые JID (по одному в строке)`,
+      genBtn: `Сгенерировать ?import код`,
+      clearBtn: `Очистить форму`,
+      importCommandLabel: `Команда импорта`,
+      copyCommandBtn: `Копировать команду`,
+      copyCodeBtn: `Копировать только код`,
+      applyHint: `Отправьте команду <code>?import &lt;code&gt;</code> в свою группу, чтобы применить эту конфигурацию.`,
+      toastCopied: `Скопировано в буфер обмена`,
+      toastLoaded: `Код загружен`
+    },
+    id: {
+      siteTitle: `WA Mod Bot — Dokumentasi dan pembuat konfigurasi`,
+      tagline: `Dokumentasi dan pembuat konfigurasi online`,
+      uiLangLabel: `Bahasa situs`,
+      navOverview: `Ringkasan`,
+      navCommands: `Perintah`,
+      navLanguages: `Bahasa`,
+      navConfig: `Pembuat Konfigurasi`,
+      overviewTitle: `Ringkasan`,
+      overviewIntro: `Bot moderasi WhatsApp yang dibangun dengan <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. Mendeteksi kata-kata kasar, memperingatkan pengguna, dan menyediakan alat admin untuk pengelolaan grup.`,
+      overviewHint: `Pada pengoperasian pertama, pindai kode QR di terminal melalui <strong>WhatsApp → Perangkat tertaut → Tautkan perangkat</strong>. Kredensial disimpan di <code>./auth/</code> dan dipakai ulang pada pengoperasian berikutnya.`,
+      coreFeatures: `Fitur utama`,
+      featProfanityName: `Deteksi kata kasar`,
+      featProfanityDesc: `20+ bahasa, normalisasi leet-speak, deteksi penghindaran lewat akhiran/awalan`,
+      featWarningsName: `Sistem peringatan`,
+      featWarningsDesc: `Dilacak per pengguna, otomatis menghukum setelah mencapai batas`,
+      featAntispamName: `Anti-spam`,
+      featAntispamDesc: `5 pesan dalam 5 detik memicu pembisuan otomatis`,
+      featBanName: `Penegakan blokir`,
+      featBanDesc: `Otomatis menendang pengguna yang diblokir jika ditambahkan kembali, menolak permintaan bergabung`,
+      featMultilangName: `Multi-bahasa`,
+      featMultilangDesc: `8 bahasa, pengaturan per grup`,
+      featCustomName: `Kata kasar khusus`,
+      featCustomDesc: `Daftar kata khusus grup`,
+      featWelcomeName: `Sambutan dan perpisahan`,
+      featWelcomeDesc: `Pesan yang dapat diatur untuk anggota yang masuk/keluar`,
+      featPersistenceName: `Ketahanan data`,
+      featPersistenceDesc: `Semua data bertahan setelah restart melalui file JSON di <code>./data/</code>`,
+      featSharingName: `Berbagi konfigurasi`,
+      featSharingDesc: `Ekspor/impor pengaturan grup sebagai kode portabel`,
+      howItWorks: `Cara kerja`,
+      how1: `Bot terhubung ke WhatsApp Web melalui Baileys`,
+      how2: `Ia mendengarkan pesan di semua grup tempatnya menjadi anggota`,
+      how3: `Dengan hak admin, ia memindai pesan untuk kata-kata kasar`,
+      how4: `Pesan yang melanggar dihapus dan pengirim menerima peringatan lewat DM`,
+      how5: `Perintah admin (awalan <code>?</code>) memungkinkan moderator memperingatkan, menendang, memblokir, membisukan, dan mengonfigurasi bot`,
+      requirements: `Persyaratan`,
+      req1: `Node.js 18+`,
+      req2: `Akun WhatsApp (dipakai sebagai nomor bot)`,
+      commandsTitle: `Perintah`,
+      publicCommands: `Perintah publik`,
+      publicHint: `Ini berfungsi untuk siapa saja, di grup maupun DM.`,
+      thCommand: `Perintah`,
+      thDescription: `Deskripsi`,
+      pub1: `Bot menjawab "Pong!"`,
+      pub2: `Menampilkan status koneksi dan waktu aktif`,
+      pub3: `Menampilkan daftar perintah publik`,
+      adminCommands: `Perintah admin`,
+      adminHint: `Ini memerlukan hak admin bot di grup. Menggunakan awalan <code>?</code> dan memerlukan @mention pengguna target.`,
+      admin1: `Memperingatkan pengguna lewat DM, menambah jumlah peringatan`,
+      admin2: `Menampilkan riwayat peringatan pengguna`,
+      admin3: `Mengeluarkan pengguna dari grup`,
+      admin4: `Memblokir pengguna (otomatis menolak bergabung kembali)`,
+      admin5: `Menghapus blokir, mengizinkan bergabung kembali`,
+      admin6: `Otomatis menghapus pesan pengguna selama durasi`,
+      admin7: `Menghapus pembisuan`,
+      admin8: `Menambah kata terlarang khusus grup`,
+      admin9: `Menghapus kata terlarang khusus grup`,
+      admin10: `Menghapus n pesan terakhir yang dilacak bot`,
+      admin11: `Mengabaikan pengguna (melewati moderasi dan pemeriksaan kata kasar)`,
+      admin12: `Berhenti mengabaikan pengguna`,
+      admin13: `Menampilkan statistik moderasi`,
+      admin14: `Menampilkan konfigurasi grup saat ini`,
+      admin15: `Menampilkan daftar perintah admin dengan bahasa yang tersedia`,
+      configCommands: `Perintah konfigurasi`,
+      config1: `Mengatur bahasa bot untuk grup ini`,
+      config2: `Peringatan sebelum hukuman otomatis (bawaan: 3)`,
+      config3: `Hukuman saat mencapai batas peringatan`,
+      config4: `Mengaktifkan/menonaktifkan fitur anti-spam`,
+      config5: `Mengatur pesan sambutan untuk anggota baru`,
+      config6: `Mengatur pesan perpisahan untuk anggota yang keluar`,
+      userHint: `Gunakan <code>{user}</code> sebagai pengganti nama anggota di pesan sambutan/perpisahan.`,
+      exportImport: `Ekspor dan impor`,
+      export1: `Menghasilkan kode dengan konfigurasi lengkap grup`,
+      export2: `Menerapkan kode konfigurasi ke grup ini`,
+      exportHint: `Buat kode di tab <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Pembuat Konfigurasi</a>, lalu kirim ke grup mana pun dengan <code>?import</code>.`,
+      autoModeration: `Moderasi otomatis`,
+      autoIntro: `Saat bot mendeteksi kata kasar dalam pesan, bot otomatis:`,
+      auto1: `Menghapus pesan`,
+      auto2: `Mengirim peringatan ke pengirim lewat DM`,
+      auto3: `Mencatat peringatan`,
+      autoFinal: `Jika pengguna mencapai batas peringatan (bawaan 3), ia otomatis dihukum (ban/kick/mute) sesuai pengaturan <code>warnPunish</code> grup.`,
+      languagesTitle: `Bahasa`,
+      languagesIntro: `Bot mendukung 8 bahasa. Bahasa diatur <strong>per grup</strong> dan tetap tersimpan setelah restart.`,
+      thCode: `Kode`,
+      thLanguage: `Bahasa`,
+      tagDefault: `(bawaan)`,
+      settingLang: `Mengatur bahasa`,
+      settingLangP1: `Semua pesan bot di grup itu akan memakai bahasa yang dipilih: peringatan kata kasar, respons perintah admin, pesan moderasi otomatis, keluaran status dan bantuan.`,
+      settingLangP2: `Jika kode tidak didukung digunakan, bot menjawab dengan daftar kode valid. Jika tidak ada bahasa yang diatur atau kunci terjemahan hilang, bahasa Inggris digunakan sebagai cadangan.`,
+      configTitle: `Pembuat Konfigurasi`,
+      importCodeTitle: `Impor kode yang sudah ada`,
+      importCodeLabel: `Tempel kode (dengan atau tanpa <code>?import</code>) untuk mengeditnya lebih lanjut`,
+      importPlaceholder: `?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi...`,
+      loadCodeBtn: `Muat kode`,
+      importError: `Kode tidak valid. Pastikan itu konfigurasi base64 yang valid.`,
+      configureTitle: `Atur grup Anda`,
+      labelLang: `Bahasa`,
+      labelWarnLimit: `Batas peringatan (hukuman otomatis setelah sekian peringatan)`,
+      labelPunish: `Hukuman saat mencapai batas peringatan`,
+      labelMuteDuration: `Durasi bisu (mis. 5m, 30s, 1d)`,
+      labelAntiSpam: `Anti-spam`,
+      labelWelcome: `Pesan sambutan (<code>{user}</code> = nama anggota)`,
+      labelGoodbye: `Pesan perpisahan (<code>{user}</code> = nama anggota)`,
+      labelCustomWords: `Kata kasar khusus (satu per baris)`,
+      labelBanned: `JID yang diblokir (satu per baris)`,
+      labelIgnored: `JID yang diabaikan (satu per baris)`,
+      genBtn: `Buat kode ?import`,
+      clearBtn: `Kosongkan formulir`,
+      importCommandLabel: `Perintah impor`,
+      copyCommandBtn: `Salin perintah`,
+      copyCodeBtn: `Salin kode saja`,
+      applyHint: `Kirim perintah <code>?import &lt;code&gt;</code> di grup Anda untuk menerapkan konfigurasi ini.`,
+      toastCopied: `Disalin ke papan klip`,
+      toastLoaded: `Kode dimuat`
+    }
+  };
 
   function $(id) { return document.getElementById(id); }
+
+  function tt(key) { return (I18N[currentLang] || I18N.en)[key] || (I18N.en[key] || key); }
+
+  function detectLang() {
+    try {
+      const saved = localStorage.getItem('uiLang');
+      if (saved && UI_LANGS.includes(saved)) return saved;
+    } catch (_) {}
+    const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return UI_LANGS.includes(nav) ? nav : 'en';
+  }
+
+  function applyLang(lang) {
+    if (!UI_LANGS.includes(lang)) lang = 'en';
+    currentLang = lang;
+    const t = I18N[lang] || I18N.en;
+    document.documentElement.lang = lang;
+    document.title = t.siteTitle;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] != null) el.innerHTML = t[key];
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      const key = el.getAttribute('data-i18n-ph');
+      if (t[key] != null) el.setAttribute('placeholder', t[key]);
+    });
+    const sel = $('uiLang');
+    if (sel) sel.value = lang;
+  }
+
+  function setUILang(lang) {
+    applyLang(lang);
+    try { localStorage.setItem('uiLang', lang); } catch (_) {}
+  }
 
   function switchTab(id) {
     document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
@@ -530,7 +1525,7 @@ npm start</code></pre>
       currentCode = raw;
       $('commandOutput').value = '?import ' + raw;
       $('output').style.display = 'block';
-      showToast('Code loaded');
+      showToast(tt('toastLoaded'));
     } catch (_) {
       $('importError').style.display = 'block';
     }
@@ -554,7 +1549,7 @@ npm start</code></pre>
   }
 
   function copyText(text) {
-    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+    navigator.clipboard.writeText(text).then(() => showToast(tt('toastCopied')));
   }
   function copyCommand() { copyText($('commandOutput').value); }
   function copyCode() { copyText(currentCode); }
@@ -565,6 +1560,8 @@ npm start</code></pre>
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 1500);
   }
+
+  applyLang(detectLang());
 </script>
 </body>
 </html>
