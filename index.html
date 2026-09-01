@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WA Mod Bot — Docs &amp; Config Maker</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #22d3ee;
+    --accent-2: #818cf8;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  header {
+    padding: 32px 24px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0b1220 0%, var(--bg) 100%);
+  }
+  header h1 { margin: 0 0 8px; font-size: 28px; }
+  header h1 span { color: var(--accent); }
+  header p { margin: 0; color: var(--muted); }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  nav button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .15s;
+  }
+  nav button:hover { border-color: var(--accent); }
+  nav button.active { background: var(--accent); color: #06222a; border-color: var(--accent); font-weight: 600; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 80px; }
+  section { display: none; }
+  section.active { display: block; }
+  h2 { font-size: 22px; margin: 8px 0 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin: 28px 0 12px; color: var(--accent-2); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td code, li code, p code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; font-size: 13px; color: var(--accent); }
+  pre {
+    background: #0b1220;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    overflow-x: auto;
+    font-size: 13px;
+  }
+  pre code { background: none; color: var(--green); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  label { display: block; margin-bottom: 14px; font-size: 14px; }
+  label span { display: block; margin-bottom: 6px; color: var(--muted); font-weight: 600; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    background: #0b1220;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 72px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: var(--panel-2); border-radius: 24px; transition: .2s; border: 1px solid var(--border); }
+  .slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: .2s; }
+  .switch input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .switch input:checked + .slider:before { transform: translateX(22px); background: #06222a; }
+  .switch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .switch-row span { color: var(--muted); font-weight: 600; font-size: 14px; }
+  .btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #06222a;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 6px;
+  }
+  .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn:hover { filter: brightness(1.1); }
+  .output {
+    margin-top: 16px;
+    display: none;
+  }
+  .output textarea { min-height: 110px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .pill { display: inline-block; background: var(--panel-2); border: 1px solid var(--border); color: var(--accent); border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 2px; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #06222a; padding: 10px 18px; border-radius: 8px;
+    font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .toast.show { opacity: 1; }
+  .error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+  .tag { font-size: 12px; color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>WA <span>Mod Bot</span></h1>
+  <p>Documentation &amp; online configuration generator</p>
+</header>
+
+<nav>
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="commands">Commands</button>
+  <button data-tab="languages">Languages</button>
+  <button data-tab="config">Config Maker</button>
+</nav>
+
+<main>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section id="overview" class="active">
+    <h2>Overview</h2>
+    <div class="card">
+      <p>A WhatsApp moderation bot built with <a href="https://github.com/WhiskeySockets/Baileys" style="color:var(--accent)">Baileys</a>. It detects profanity, warns users, and provides admin tools for group management.</p>
+      <pre><code>git clone https://github.com/martinsuii/wa-bot.git
+cd wa-bot
+npm install
+npm start</code></pre>
+      <p class="hint">On first run, scan the QR code in your terminal via <strong>WhatsApp → Linked Devices → Link a Device</strong>. Credentials are saved to <code>./auth/</code> and reused on subsequent starts.</p>
+    </div>
+
+    <h3>Core Features</h3>
+    <div class="card">
+      <table>
+        <tr><td><strong>Profanity detection</strong></td><td>20+ languages, leet-speak normalization, suffix/prefix evasion handling</td></tr>
+        <tr><td><strong>Warning system</strong></td><td>Tracked per user, auto-punishes after reaching the limit</td></tr>
+        <tr><td><strong>Anti-spam</strong></td><td>5 messages in 5 seconds triggers auto-mute</td></tr>
+        <tr><td><strong>Ban enforcement</strong></td><td>Auto-kicks banned users if re-added, rejects join requests</td></tr>
+        <tr><td><strong>Multi-language</strong></td><td>8 languages, per-group setting</td></tr>
+        <tr><td><strong>Custom badwords</strong></td><td>Group-specific word lists</td></tr>
+        <tr><td><strong>Welcome &amp; goodbye</strong></td><td>Configurable messages for joining/leaving members</td></tr>
+        <tr><td><strong>Persistence</strong></td><td>All data survives restarts via JSON files in <code>./data/</code></td></tr>
+        <tr><td><strong>Config sharing</strong></td><td>Export/import group settings as a portable code</td></tr>
+      </table>
+    </div>
+
+    <h3>How It Works</h3>
+    <div class="card">
+      <ol style="margin:0; padding-left:20px;">
+        <li>The bot connects to WhatsApp Web via Baileys</li>
+        <li>It listens for messages in all groups it's a member of</li>
+        <li>With admin privileges, it scans messages for profanity</li>
+        <li>Offending messages are deleted and the sender receives a DM warning</li>
+        <li>Admin commands (<code>?</code> prefix) allow moderators to warn, kick, ban, mute, and configure the bot</li>
+      </ol>
+    </div>
+
+    <h3>Requirements</h3>
+    <div class="card">
+      <ul style="margin:0;">
+        <li>Node.js 18+</li>
+        <li>A WhatsApp account (used as the bot's number)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== COMMANDS ===================== -->
+  <section id="commands">
+    <h2>Commands</h2>
+
+    <h3>Public Commands</h3>
+    <div class="card">
+      <p class="hint" style="margin-top:0;">These work for anyone, in both groups and DMs.</p>
+      <table>
+        <tr><th>Command</th><th>Description</th></tr>
+        <tr><td><code>!ping</code></td><td>Bot responds with "Pong!"</td></tr>
+        <tr><td><code>!status</code></td><td>Shows connection status and uptime</td></tr>
+        <tr><td><code>!help</code></td><td>Shows public command list</td></tr>
+      </table>
+    </div>
+
+    <h3>Admin Commands</h3>
+    <div class="card">
+      <p class="hint" style="margin-top:0;">These require the bot to have admin privileges in the group. They use the <code>?</code> prefix and require @mentioning the target user.</p>
+      <table>
+        <tr><th>Command</th><th>Description</th></tr>
+        <tr><td><code>?warn @user [reason]</code></td><td>Warn user via DM, increments warning count</td></tr>
+        <tr><td><code>?warnings @user</code></td><td>Show warning history for the user</td></tr>
+        <tr><td><code>?kick @user</code></td><td>Remove user from the group</td></tr>
+        <tr><td><code>?ban @user</code></td><td>Ban user (auto-reject rejoin)</td></tr>
+        <tr><td><code>?unban @user</code></td><td>Remove ban, allowing rejoin</td></tr>
+        <tr><td><code>?mute @user &lt;time&gt; [s|m|d]</code></td><td>Auto-delete user's messages for duration</td></tr>
+        <tr><td><code>?unmute @user</code></td><td>Remove mute</td></tr>
+        <tr><td><code>?addword &lt;word&gt;</code></td><td>Add a group-specific banned word</td></tr>
+        <tr><td><code>?removeword &lt;word&gt;</code></td><td>Remove a group-specific banned word</td></tr>
+        <tr><td><code>?purge &lt;n&gt;</code></td><td>Delete the last n messages tracked by the bot</td></tr>
+        <tr><td><code>?ignore @user</code></td><td>Ignore a user (skip moderation &amp; profanity checks)</td></tr>
+        <tr><td><code>?unignore @user</code></td><td>Stop ignoring a user</td></tr>
+        <tr><td><code>?stats</code></td><td>Show moderation statistics</td></tr>
+        <tr><td><code>?settings</code></td><td>Show current group configuration</td></tr>
+        <tr><td><code>?help</code></td><td>Show admin command list with available languages</td></tr>
+      </table>
+    </div>
+
+    <h3>Configuration Commands</h3>
+    <div class="card">
+      <table>
+        <tr><th>Command</th><th>Description</th></tr>
+        <tr><td><code>?set-lang &lt;code&gt;</code></td><td>Set bot language for this group</td></tr>
+        <tr><td><code>?set-warnlimit &lt;n&gt;</code></td><td>Warnings before auto-punish (default: 3)</td></tr>
+        <tr><td><code>?set-warnpunish ban|kick|mute [dur]</code></td><td>Punishment for reaching warn limit</td></tr>
+        <tr><td><code>?set-antispam on|off</code></td><td>Toggle anti-spam feature</td></tr>
+        <tr><td><code>?set-welcome &lt;msg&gt;</code></td><td>Set welcome message for new members</td></tr>
+        <tr><td><code>?set-goodbye &lt;msg&gt;</code></td><td>Set goodbye message for leaving members</td></tr>
+      </table>
+      <p class="hint">Use <code>{user}</code> as a placeholder for the member's name in welcome/goodbye messages.</p>
+    </div>
+
+    <h3>Export &amp; Import</h3>
+    <div class="card">
+      <table>
+        <tr><th>Command</th><th>Description</th></tr>
+        <tr><td><code>?export</code></td><td>Generate a code with the group's full configuration</td></tr>
+        <tr><td><code>?import &lt;code&gt;</code></td><td>Apply a configuration code to this group</td></tr>
+      </table>
+      <p class="hint">Generate a code in the <a href="#" onclick="switchTab('config')" style="color:var(--accent)">Config Maker</a> tab, then send it in any group with <code>?import</code>.</p>
+    </div>
+
+    <h3>Auto-Moderation</h3>
+    <div class="card">
+      <p>When the bot detects profanity in a message, it automatically:</p>
+      <ol style="margin:0; padding-left:20px;">
+        <li>Deletes the message</li>
+        <li>DMs the sender a warning</li>
+        <li>Records the warning</li>
+      </ol>
+      <p style="margin-bottom:0;">If a user reaches the warn limit (default 3), they are auto-punished (ban/kick/mute) according to the group's <code>warnPunish</code> setting.</p>
+    </div>
+  </section>
+
+  <!-- ===================== LANGUAGES ===================== -->
+  <section id="languages">
+    <h2>Languages</h2>
+    <div class="card">
+      <p>The bot supports 8 languages. Language is set <strong>per-group</strong> and persists across restarts.</p>
+      <table>
+        <tr><th>Code</th><th>Language</th></tr>
+        <tr><td><code>en</code></td><td>English <span class="tag">(default)</span></td></tr>
+        <tr><td><code>cs</code></td><td>Čeština (Czech)</td></tr>
+        <tr><td><code>es</code></td><td>Español (Spanish)</td></tr>
+        <tr><td><code>de</code></td><td>Deutsch (German)</td></tr>
+        <tr><td><code>fr</code></td><td>Français (French)</td></tr>
+        <tr><td><code>pt</code></td><td>Português (Portuguese)</td></tr>
+        <tr><td><code>ru</code></td><td>Русский (Russian)</td></tr>
+        <tr><td><code>id</code></td><td>Bahasa Indonesia</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Setting a language</h3>
+      <pre><code>?set-lang cs</code></pre>
+      <p>All bot messages in that group will use the selected language: profanity warnings, admin command responses, auto-moderation messages, status and help output.</p>
+      <p>If an unsupported code is used, the bot responds with the list of valid codes. If no language is set, or a translation key is missing, English is used as the fallback.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CONFIG MAKER ===================== -->
+  <section id="config">
+    <h2>Config Maker</h2>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Import an existing code</h3>
+      <label>
+        <span>Paste a code (with or without <code>?import</code>) to edit it further</span>
+        <textarea id="importInput" placeholder="?import eyJ2ZXJzaW9uIjoiMS4wIiwibGFuZyI6ImNzIi..."></textarea>
+      </label>
+      <button class="btn secondary" onclick="loadCode()">Load code</button>
+      <div class="error" id="importError">Invalid code. Make sure it's a valid base64 config.</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Configure your group</h3>
+      <div class="grid">
+        <div>
+          <label>
+            <span>Language</span>
+            <select id="lang">
+              <option value="en">en — English</option>
+              <option value="cs">cs — Čeština (Czech)</option>
+              <option value="es">es — Español (Spanish)</option>
+              <option value="de">de — Deutsch (German)</option>
+              <option value="fr">fr — Français (French)</option>
+              <option value="pt">pt — Português (Portuguese)</option>
+              <option value="ru">ru — Русский (Russian)</option>
+              <option value="id">id — Bahasa Indonesia</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Warn limit (auto-punish after this many warnings)</span>
+            <input type="number" id="warnLimit" value="3" min="1">
+          </label>
+
+          <label>
+            <span>Punishment when warn limit is reached</span>
+            <select id="warnPunish" onchange="togglePunishDuration()">
+              <option value="ban">ban</option>
+              <option value="kick">kick</option>
+              <option value="mute">mute</option>
+            </select>
+          </label>
+
+          <label id="punishDurationWrap" style="display:none;">
+            <span>Mute duration (e.g. 5m, 30s, 1d)</span>
+            <input type="text" id="punishDuration" value="5m" placeholder="5m">
+          </label>
+
+          <div class="switch-row">
+            <span>Anti-spam</span>
+            <label class="switch">
+              <input type="checkbox" id="antiSpam" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label>
+            <span>Welcome message (<code>{user}</code> = member name)</span>
+            <input type="text" id="welcome" placeholder="Hello {user}, welcome!">
+          </label>
+
+          <label>
+            <span>Goodbye message (<code>{user}</code> = member name)</span>
+            <input type="text" id="goodbye" placeholder="Goodbye {user}.">
+          </label>
+
+          <label>
+            <span>Custom badwords (one per line)</span>
+            <textarea id="customWords" placeholder="spoiler&#10;leak"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <label>
+        <span>Banned JIDs (one per line)</span>
+        <textarea id="banned" placeholder="123456789@s.whatsapp.net"></textarea>
+      </label>
+
+      <label>
+        <span>Ignored JIDs (one per line)</span>
+        <textarea id="ignored" placeholder="123456789@s.whatsapp.net"></textarea>
+      </label>
+    </div>
+
+    <div class="card">
+      <button class="btn" onclick="generateCode()">Generate ?import code</button>
+      <button class="btn secondary" onclick="clearAll()">Clear form</button>
+
+      <div class="output" id="output">
+        <label>
+          <span>Import command</span>
+          <textarea id="commandOutput" readonly onclick="this.select()"></textarea>
+        </label>
+        <button class="btn secondary" onclick="copyCommand()">Copy command</button>
+        <button class="btn secondary" onclick="copyCode()">Copy code only</button>
+        <p class="hint">Send the <code>?import &lt;code&gt;</code> command in your group to apply this configuration.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+  const LANGS = ['en','cs','es','de','fr','pt','ru','id'];
+  let currentCode = '';
+
+  function $(id) { return document.getElementById(id); }
+
+  function switchTab(id) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === id));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll('nav button').forEach(b => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+
+  function togglePunishDuration() {
+    $('punishDurationWrap').style.display = $('warnPunish').value === 'mute' ? 'block' : 'none';
+  }
+
+  function toBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin);
+  }
+
+  function fromBase64(b64) {
+    try {
+      const bin = atob(b64);
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function parseDuration(text) {
+    const match = (text || '').trim().match(/^(\d+)\s*(s|m|h|d)?$/i);
+    if (!match) return null;
+    const n = parseInt(match[1], 10);
+    const unit = (match[2] || 'm').toLowerCase();
+    return n * ({ s: 1000, m: 60000, h: 3600000, d: 86400000 }[unit]);
+  }
+
+  function lines(id) {
+    return $(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+  }
+
+  function buildConfig() {
+    const settings = {};
+
+    const warnLimit = parseInt($('warnLimit').value, 10);
+    if (warnLimit && warnLimit > 0) settings.warnLimit = warnLimit;
+
+    settings.antiSpam = $('antiSpam').checked;
+
+    const punish = $('warnPunish').value;
+    settings.warnPunish = punish;
+    if (punish === 'mute') {
+      const ms = parseDuration($('punishDuration').value);
+      if (ms) settings.warnPunishDuration = ms;
+    }
+
+    const welcome = $('welcome').value.trim();
+    if (welcome) settings.welcome = welcome;
+
+    const goodbye = $('goodbye').value.trim();
+    if (goodbye) settings.goodbye = goodbye;
+
+    return {
+      lang: $('lang').value,
+      settings: settings,
+      banned: lines('banned'),
+      ignored: lines('ignored'),
+      customWords: lines('customWords'),
+    };
+  }
+
+  function fillForm(data) {
+    $('lang').value = LANGS.includes(data.lang) ? data.lang : 'en';
+    $('warnLimit').value = (data.settings && data.settings.warnLimit) || 3;
+    $('antiSpam').checked = !(data.settings && data.settings.antiSpam === false);
+    $('warnPunish').value = (data.settings && ['ban','kick','mute'].includes(data.settings.warnPunish)) ? data.settings.warnPunish : 'ban';
+    $('welcome').value = (data.settings && data.settings.welcome) || '';
+    $('goodbye').value = (data.settings && data.settings.goodbye) || '';
+    if (data.settings && data.settings.warnPunishDuration) {
+      const ms = data.settings.warnPunishDuration;
+      $('punishDuration').value = ms >= 86400000 ? (ms/86400000)+'d' : ms >= 3600000 ? (ms/3600000)+'h' : ms >= 60000 ? (ms/60000)+'m' : (ms/1000)+'s';
+    }
+    $('customWords').value = (data.customWords || []).join('\n');
+    $('banned').value = (data.banned || []).join('\n');
+    $('ignored').value = (data.ignored || []).join('\n');
+    togglePunishDuration();
+  }
+
+  function generateCode() {
+    const json = JSON.stringify(buildConfig());
+    currentCode = toBase64(json);
+    $('commandOutput').value = '?import ' + currentCode;
+    $('output').style.display = 'block';
+    $('output').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function loadCode() {
+    $('importError').style.display = 'none';
+    let raw = $('importInput').value.trim();
+    if (!raw) return;
+    raw = raw.replace(/^\?import\s*/i, '');
+    const json = fromBase64(raw);
+    if (!json) { $('importError').style.display = 'block'; return; }
+    try {
+      const data = JSON.parse(json);
+      if (!data || typeof data !== 'object') throw new Error('bad');
+      fillForm(data);
+      currentCode = raw;
+      $('commandOutput').value = '?import ' + raw;
+      $('output').style.display = 'block';
+      showToast('Code loaded');
+    } catch (_) {
+      $('importError').style.display = 'block';
+    }
+  }
+
+  function clearAll() {
+    $('importInput').value = '';
+    $('lang').value = 'en';
+    $('warnLimit').value = '3';
+    $('warnPunish').value = 'ban';
+    $('punishDuration').value = '5m';
+    $('antiSpam').checked = true;
+    $('welcome').value = '';
+    $('goodbye').value = '';
+    $('customWords').value = '';
+    $('banned').value = '';
+    $('ignored').value = '';
+    $('output').style.display = 'none';
+    $('importError').style.display = 'none';
+    togglePunishDuration();
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+  }
+  function copyCommand() { copyText($('commandOutput').value); }
+  function copyCode() { copyText(currentCode); }
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1500);
+  }
+</script>
+</body>
+</html>
