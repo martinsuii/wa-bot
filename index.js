@@ -10,7 +10,7 @@ const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
-const { checkText } = require('./badwords');
+const { checkText, stripDiacritics } = require('./badwords');
 const { t, DEFAULT_LANG, translations } = require('./lang');
 
 const AUTH_DIR = './auth';
@@ -358,13 +358,14 @@ function checkCustomWords(text, groupJid) {
   if (!text) return { found: false };
   const words = customBadwords.get(groupJid);
   if (!words || words.size === 0) return { found: false };
-  const tokens = text.toLowerCase().split(/[\s\-_.,!?;:'"()\[\]{}<>\/\\|@#$%^&*+=~`]+/).filter(Boolean);
+  const folded = new Set([...words].map(w => stripDiacritics(w.toLowerCase())));
+  const tokens = stripDiacritics(text.toLowerCase()).split(/[\s\-_.,!?;:'"()\[\]{}<>\/\\|@#$%^&*+=~`]+/).filter(Boolean);
   for (const token of tokens) {
-    if (words.has(token)) return { found: true, word: token };
+    if (folded.has(token)) return { found: true, word: token };
   }
-  const compact = text.toLowerCase().replace(/[^a-z0-9]/g, '');
-  for (const w of words) {
-    if (w.length >= 3 && compact.includes(w.toLowerCase())) return { found: true, word: w };
+  const compact = stripDiacritics(text.toLowerCase()).replace(/[^a-z0-9]/g, '');
+  for (const w of folded) {
+    if (w.length >= 3 && compact.includes(w)) return { found: true, word: w };
   }
   return { found: false };
 }

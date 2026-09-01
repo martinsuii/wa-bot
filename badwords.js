@@ -402,24 +402,36 @@ function normalizeWord(word) {
   return normalized;
 }
 
+function stripDiacritics(str) {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[ßæœøđłıșțőű]/g, (ch) => ({
+      'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'đ': 'd',
+      'ł': 'l', 'ı': 'i', 'ș': 's', 'ț': 't', 'ő': 'o', 'ű': 'u',
+    }[ch]));
+}
+
+const foldedBadWords = new Set([...badWords].map(stripDiacritics));
+
 function checkText(text) {
   if (!text) return { found: false };
 
   const cleaned = text.toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, '');
-  const normalized = normalizeWord(cleaned);
+  const normalized = stripDiacritics(normalizeWord(cleaned));
 
   const words = normalized.split(/[\s\-_.,!?;:'"()\[\]{}<>\/\\|@#$%^&*+=~`\u2000-\u206F]+/)
     .filter(w => w.length > 0);
 
   for (const word of words) {
-    if (badWords.has(word)) {
+    if (foldedBadWords.has(word)) {
       return { found: true, word };
     }
   }
 
   for (const word of words) {
     if (word.length < 3) continue;
-    for (const bad of badWords) {
+    for (const bad of foldedBadWords) {
       if (bad.includes(' ')) continue;
       const compactBad = bad.replace(/[^a-z]/g, '');
       if (compactBad.length < 4) continue;
@@ -442,4 +454,4 @@ function checkText(text) {
   return { found: false };
 }
 
-module.exports = { badWords, checkText, normalizeWord };
+module.exports = { badWords, checkText, normalizeWord, stripDiacritics };
