@@ -154,6 +154,15 @@
   .toast.show { opacity: 1; }
   .error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
   .tag { font-size: 12px; color: var(--yellow); }
+  .cc-item { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--panel-2); }
+  .cc-head { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+  .cc-head label { margin: 0; flex: 1; min-width: 120px; }
+  .cc-head .cc-switch { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
+  .cc-step { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .cc-step select { flex: 0 0 auto; width: auto; min-width: 130px; }
+  .cc-step input { flex: 1; min-width: 160px; }
+  .cc-chk { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .cc-remove { padding: 6px 12px; font-size: 13px; margin-top: 0; }
 </style>
 </head>
 <body>
@@ -422,6 +431,13 @@ npm start</code></pre>
     </div>
 
     <div class="card">
+      <h3 style="margin-top:0;" data-i18n="ccTitle">Custom Commands</h3>
+      <p class="hint" style="margin-top:0;" data-i18n="ccHint">Commands you define here run a list of steps when triggered. Placeholders: {user} sender number, {args} text after the command, {result} last web fetch result.</p>
+      <div id="commandList"></div>
+      <button class="btn secondary" onclick="addCommand()" data-i18n="ccAdd">Add command</button>
+    </div>
+
+    <div class="card">
       <button class="btn" onclick="generateCode()" data-i18n="genBtn">Generate ?import code</button>
       <button class="btn secondary" onclick="clearAll()" data-i18n="clearBtn">Clear form</button>
 
@@ -446,6 +462,7 @@ npm start</code></pre>
   const UI_LANGS = ['en','cs','es','de','fr','pt','ru','id'];
   let currentCode = '';
   let currentLang = 'en';
+  let ccCommands = [];
 
   const I18N = {
     en: {
@@ -563,7 +580,20 @@ npm start</code></pre>
       copyCodeBtn: `Copy code only`,
       applyHint: `Send the <code>?import &lt;code&gt;</code> command in your group to apply this configuration.`,
       toastCopied: `Copied to clipboard`,
-      toastLoaded: `Code loaded`
+      toastLoaded: `Code loaded`,
+      ccTitle: `Custom Commands`,
+      ccHint: `Commands you define here run a list of steps when triggered. Placeholders: {user} sender number, {args} text after the command, {result} last web fetch result.`,
+      ccAdd: `Add command`,
+      ccRemove: `Remove`,
+      ccPrefix: `Prefix`,
+      ccName: `Name`,
+      ccAdminOnly: `Admin only`,
+      ccAddStep: `Add step`,
+      ccStepReply: `Reply`,
+      ccStepWebfetch: `Web fetch`,
+      ccStepCommand: `Run command`,
+      ccAutoReply: `Reply with the result`,
+      ccEmpty: `No custom commands yet.`
     },
     cs: {
       siteTitle: `WA Mod Bot — Dokumentace a tvůrce konfigurace`,
@@ -680,7 +710,20 @@ npm start</code></pre>
       copyCodeBtn: `Kopírovat pouze kód`,
       applyHint: `Pošlete příkaz <code>?import &lt;code&gt;</code> do své skupiny pro aplikaci této konfigurace.`,
       toastCopied: `Zkopírováno do schránky`,
-      toastLoaded: `Kód načten`
+      toastLoaded: `Kód načten`,
+      ccTitle: `Vlastní příkazy`,
+      ccHint: `Zde definované příkazy po spuštění provedou seznam kroků. Zástupné symboly: {user} číslo odesílatele, {args} text za příkazem, {result} výsledek posledního webového dotazu.`,
+      ccAdd: `Přidat příkaz`,
+      ccRemove: `Odebrat`,
+      ccPrefix: `Předpona`,
+      ccName: `Název`,
+      ccAdminOnly: `Jen pro adminy`,
+      ccAddStep: `Přidat krok`,
+      ccStepReply: `Odpovědět`,
+      ccStepWebfetch: `Webový dotaz`,
+      ccStepCommand: `Spustit příkaz`,
+      ccAutoReply: `Odpovědět výsledkem`,
+      ccEmpty: `Zatím žádné vlastní příkazy.`
     },
     es: {
       siteTitle: `WA Mod Bot — Documentación y generador de configuración`,
@@ -797,7 +840,20 @@ npm start</code></pre>
       copyCodeBtn: `Copiar solo el código`,
       applyHint: `Envía el comando <code>?import &lt;code&gt;</code> en tu grupo para aplicar esta configuración.`,
       toastCopied: `Copiado al portapapeles`,
-      toastLoaded: `Código cargado`
+      toastLoaded: `Código cargado`,
+      ccTitle: `Comandos personalizados`,
+      ccHint: `Los comandos que definas aquí ejecutan una lista de pasos al activarse. Marcadores: {user} número del remitente, {args} texto tras el comando, {result} resultado de la última consulta web.`,
+      ccAdd: `Añadir comando`,
+      ccRemove: `Quitar`,
+      ccPrefix: `Prefijo`,
+      ccName: `Nombre`,
+      ccAdminOnly: `Solo admin`,
+      ccAddStep: `Añadir paso`,
+      ccStepReply: `Responder`,
+      ccStepWebfetch: `Consulta web`,
+      ccStepCommand: `Ejecutar comando`,
+      ccAutoReply: `Responder con el resultado`,
+      ccEmpty: `Aún no hay comandos personalizados.`
     },
     de: {
       siteTitle: `WA Mod Bot — Dokumentation und Konfigurations-Generator`,
@@ -914,7 +970,20 @@ npm start</code></pre>
       copyCodeBtn: `Nur Code kopieren`,
       applyHint: `Sende den Befehl <code>?import &lt;code&gt;</code> in deine Gruppe, um diese Konfiguration anzuwenden.`,
       toastCopied: `In die Zwischenablage kopiert`,
-      toastLoaded: `Code geladen`
+      toastLoaded: `Code geladen`,
+      ccTitle: `Benutzerdefinierte Befehle`,
+      ccHint: `Befehle, die du hier definierst, führen beim Auslösen eine Liste von Schritten aus. Platzhalter: {user} Absendernummer, {args} Text nach dem Befehl, {result} Ergebnis des letzten Webaufrufs.`,
+      ccAdd: `Befehl hinzufügen`,
+      ccRemove: `Entfernen`,
+      ccPrefix: `Präfix`,
+      ccName: `Name`,
+      ccAdminOnly: `Nur Admins`,
+      ccAddStep: `Schritt hinzufügen`,
+      ccStepReply: `Antworten`,
+      ccStepWebfetch: `Webabruf`,
+      ccStepCommand: `Befehl ausführen`,
+      ccAutoReply: `Mit dem Ergebnis antworten`,
+      ccEmpty: `Noch keine benutzerdefinierten Befehle.`
     },
     fr: {
       siteTitle: `WA Mod Bot — Documentation et générateur de configuration`,
@@ -1031,7 +1100,20 @@ npm start</code></pre>
       copyCodeBtn: `Copier le code seul`,
       applyHint: `Envoyez la commande <code>?import &lt;code&gt;</code> dans votre groupe pour appliquer cette configuration.`,
       toastCopied: `Copié dans le presse-papiers`,
-      toastLoaded: `Code chargé`
+      toastLoaded: `Code chargé`,
+      ccTitle: `Commandes personnalisées`,
+      ccHint: `Les commandes définies ici exécutent une liste d'étapes lorsqu'elles sont déclenchées. Variables : {user} numéro de l'expéditeur, {args} texte après la commande, {result} résultat du dernier appel web.`,
+      ccAdd: `Ajouter une commande`,
+      ccRemove: `Retirer`,
+      ccPrefix: `Préfixe`,
+      ccName: `Nom`,
+      ccAdminOnly: `Admin uniquement`,
+      ccAddStep: `Ajouter une étape`,
+      ccStepReply: `Répondre`,
+      ccStepWebfetch: `Appel web`,
+      ccStepCommand: `Exécuter une commande`,
+      ccAutoReply: `Répondre avec le résultat`,
+      ccEmpty: `Aucune commande personnalisée pour l'instant.`
     },
     pt: {
       siteTitle: `WA Mod Bot — Documentação e gerador de configuração`,
@@ -1148,7 +1230,20 @@ npm start</code></pre>
       copyCodeBtn: `Copiar apenas o código`,
       applyHint: `Envie o comando <code>?import &lt;code&gt;</code> no seu grupo para aplicar esta configuração.`,
       toastCopied: `Copiado para a área de transferência`,
-      toastLoaded: `Código carregado`
+      toastLoaded: `Código carregado`,
+      ccTitle: `Comandos personalizados`,
+      ccHint: `Os comandos que você definir aqui executam uma lista de etapas ao serem acionados. Variáveis: {user} número do remetente, {args} texto após o comando, {result} resultado da última consulta web.`,
+      ccAdd: `Adicionar comando`,
+      ccRemove: `Remover`,
+      ccPrefix: `Prefixo`,
+      ccName: `Nome`,
+      ccAdminOnly: `Somente admin`,
+      ccAddStep: `Adicionar etapa`,
+      ccStepReply: `Responder`,
+      ccStepWebfetch: `Consulta web`,
+      ccStepCommand: `Executar comando`,
+      ccAutoReply: `Responder com o resultado`,
+      ccEmpty: `Nenhum comando personalizado ainda.`
     },
     ru: {
       siteTitle: `WA Mod Bot — Документация и конструктор конфигурации`,
@@ -1265,7 +1360,20 @@ npm start</code></pre>
       copyCodeBtn: `Копировать только код`,
       applyHint: `Отправьте команду <code>?import &lt;code&gt;</code> в свою группу, чтобы применить эту конфигурацию.`,
       toastCopied: `Скопировано в буфер обмена`,
-      toastLoaded: `Код загружен`
+      toastLoaded: `Код загружен`,
+      ccTitle: `Пользовательские команды`,
+      ccHint: `Определённые здесь команды при срабатывании выполняют список шагов. Переменные: {user} номер отправителя, {args} текст после команды, {result} результат последнего веб-запроса.`,
+      ccAdd: `Добавить команду`,
+      ccRemove: `Удалить`,
+      ccPrefix: `Префикс`,
+      ccName: `Название`,
+      ccAdminOnly: `Только для админов`,
+      ccAddStep: `Добавить шаг`,
+      ccStepReply: `Ответить`,
+      ccStepWebfetch: `Веб-запрос`,
+      ccStepCommand: `Выполнить команду`,
+      ccAutoReply: `Ответить результатом`,
+      ccEmpty: `Пользовательских команд пока нет.`
     },
     id: {
       siteTitle: `WA Mod Bot — Dokumentasi dan pembuat konfigurasi`,
@@ -1382,7 +1490,20 @@ npm start</code></pre>
       copyCodeBtn: `Salin kode saja`,
       applyHint: `Kirim perintah <code>?import &lt;code&gt;</code> di grup Anda untuk menerapkan konfigurasi ini.`,
       toastCopied: `Disalin ke papan klip`,
-      toastLoaded: `Kode dimuat`
+      toastLoaded: `Kode dimuat`,
+      ccTitle: `Perintah khusus`,
+      ccHint: `Perintah yang Anda definisikan di sini menjalankan daftar langkah saat dipicu. Placeholder: {user} nomor pengirim, {args} teks setelah perintah, {result} hasil fetch web terakhir.`,
+      ccAdd: `Tambah perintah`,
+      ccRemove: `Hapus`,
+      ccPrefix: `Awalan`,
+      ccName: `Nama`,
+      ccAdminOnly: `Hanya admin`,
+      ccAddStep: `Tambah langkah`,
+      ccStepReply: `Balas`,
+      ccStepWebfetch: `Fetch web`,
+      ccStepCommand: `Jalankan perintah`,
+      ccAutoReply: `Balas dengan hasilnya`,
+      ccEmpty: `Belum ada perintah khusus.`
     }
   };
 
@@ -1415,6 +1536,7 @@ npm start</code></pre>
     });
     const sel = $('uiLang');
     if (sel) sel.value = lang;
+    renderCommands();
   }
 
   function setUILang(lang) {
@@ -1465,6 +1587,113 @@ npm start</code></pre>
     return $(id).value.split('\n').map(s => s.trim()).filter(Boolean);
   }
 
+  function escapeAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function addCommand() { ccCommands.push({ prefix: '?', name: '', adminOnly: false, steps: [{ type: 'reply', text: '' }] }); renderCommands(); }
+  function removeCommand(ci) { ccCommands.splice(ci, 1); renderCommands(); }
+  function addStep(ci) { ccCommands[ci].steps.push({ type: 'reply', text: '' }); renderCommands(); }
+  function removeStep(ci, si) { ccCommands[ci].steps.splice(si, 1); renderCommands(); }
+
+  function renderStep(ci, si, s) {
+    const typeOpts = ['reply', 'webfetch', 'command'].map(t =>
+      `<option value="${t}" ${s.type === t ? 'selected' : ''}>${tt('ccStep' + cap(t))}</option>`).join('');
+    let fields = '';
+    if (s.type === 'reply') {
+      fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="text" value="${escapeAttr(s.text || '')}" placeholder="...">`;
+    } else if (s.type === 'webfetch') {
+      fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="url" value="${escapeAttr(s.url || '')}" placeholder="https://">
+        <label class="cc-chk"><input type="checkbox" data-ci="${ci}" data-si="${si}" data-field="reply" ${s.reply !== false ? 'checked' : ''}> <span data-i18n="ccAutoReply">${tt('ccAutoReply')}</span></label>`;
+    } else {
+      fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="command" value="${escapeAttr(s.command || '')}" placeholder="?settings">`;
+    }
+    return `<div class="cc-step">
+      <select data-ci="${ci}" data-si="${si}" data-field="type">${typeOpts}</select>
+      ${fields}
+      <button class="btn secondary cc-remove" data-action="removeStep" data-ci="${ci}" data-si="${si}">×</button>
+    </div>`;
+  }
+
+  function renderCommands() {
+    const wrap = $('commandList');
+    if (!wrap) return;
+    if (!ccCommands.length) {
+      wrap.innerHTML = `<p class="hint" data-i18n="ccEmpty">${tt('ccEmpty')}</p>`;
+      return;
+    }
+    let html = '';
+    ccCommands.forEach((c, ci) => {
+      html += `
+      <div class="cc-item">
+        <div class="cc-head">
+          <label><span data-i18n="ccPrefix">${tt('ccPrefix')}</span>
+            <select data-ci="${ci}" data-field="prefix">
+              <option value="?" ${c.prefix === '?' ? 'selected' : ''}>?</option>
+              <option value="!" ${c.prefix === '!' ? 'selected' : ''}>!</option>
+            </select>
+          </label>
+          <label><span data-i18n="ccName">${tt('ccName')}</span>
+            <input type="text" data-ci="${ci}" data-field="name" value="${escapeAttr(c.name || '')}" placeholder="e.g. hello">
+          </label>
+          <label class="cc-switch"><span data-i18n="ccAdminOnly">${tt('ccAdminOnly')}</span>
+            <input type="checkbox" data-ci="${ci}" data-field="adminOnly" ${c.adminOnly ? 'checked' : ''}>
+          </label>
+          <button class="btn secondary cc-remove" data-action="removeCommand" data-ci="${ci}" data-i18n="ccRemove">${tt('ccRemove')}</button>
+        </div>
+        <div class="cc-steps">${c.steps.map((s, si) => renderStep(ci, si, s)).join('')}</div>
+        <button class="btn secondary cc-remove" data-action="addStep" data-ci="${ci}" data-i18n="ccAddStep">${tt('ccAddStep')}</button>
+      </div>`;
+    });
+    wrap.innerHTML = html;
+  }
+
+  (function initCustomCommands() {
+    const wrap = $('commandList');
+    if (!wrap) return;
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const ci = parseInt(btn.dataset.ci, 10);
+      const si = btn.dataset.si != null ? parseInt(btn.dataset.si, 10) : null;
+      const action = btn.dataset.action;
+      if (action === 'removeCommand') removeCommand(ci);
+      else if (action === 'removeStep') removeStep(ci, si);
+      else if (action === 'addStep') addStep(ci);
+    });
+    wrap.addEventListener('change', (e) => {
+      const el = e.target;
+      if (el.dataset.ci == null) return;
+      const ci = parseInt(el.dataset.ci, 10);
+      const cmd = ccCommands[ci];
+      if (!cmd) return;
+      if (el.dataset.si == null) {
+        if (el.dataset.field === 'prefix') cmd.prefix = el.value;
+        if (el.dataset.field === 'adminOnly') cmd.adminOnly = el.checked;
+      } else {
+        const si = parseInt(el.dataset.si, 10);
+        const step = cmd.steps[si];
+        if (el.dataset.field === 'type') { step.type = el.value; renderCommands(); return; }
+        if (el.dataset.field === 'reply') step.reply = el.checked;
+      }
+    });
+    wrap.addEventListener('input', (e) => {
+      const el = e.target;
+      if (el.dataset.ci == null) return;
+      const ci = parseInt(el.dataset.ci, 10);
+      const cmd = ccCommands[ci];
+      if (!cmd) return;
+      if (el.dataset.si == null) {
+        if (el.dataset.field === 'name') cmd.name = el.value;
+      } else {
+        const si = parseInt(el.dataset.si, 10);
+        const step = cmd.steps[si];
+        if (el.dataset.field === 'text') step.text = el.value;
+        else if (el.dataset.field === 'url') step.url = el.value;
+        else if (el.dataset.field === 'command') step.command = el.value;
+      }
+    });
+  })();
+
   function buildConfig() {
     const settings = {};
 
@@ -1492,6 +1721,21 @@ npm start</code></pre>
       banned: lines('banned'),
       ignored: lines('ignored'),
       customWords: lines('customWords'),
+      customCommands: ccCommands.filter(c => c.name && c.name.trim()).map(c => ({
+        prefix: c.prefix === '!' ? '!' : '?',
+        name: c.name.trim(),
+        adminOnly: !!c.adminOnly,
+        steps: (c.steps || []).filter(s => {
+          if (s.type === 'reply') return s.text && s.text.trim();
+          if (s.type === 'webfetch') return s.url && s.url.trim();
+          if (s.type === 'command') return s.command && s.command.trim();
+          return false;
+        }).map(s => {
+          if (s.type === 'reply') return { type: 'reply', text: s.text };
+          if (s.type === 'webfetch') return { type: 'webfetch', url: s.url, reply: s.reply !== false };
+          return { type: 'command', command: s.command };
+        }),
+      })),
     };
   }
 
@@ -1509,6 +1753,19 @@ npm start</code></pre>
     $('customWords').value = (data.customWords || []).join('\n');
     $('banned').value = (data.banned || []).join('\n');
     $('ignored').value = (data.ignored || []).join('\n');
+    ccCommands = Array.isArray(data.customCommands) ? data.customCommands.map(c => ({
+      prefix: c.prefix === '!' ? '!' : '?',
+      name: c.name || '',
+      adminOnly: !!c.adminOnly,
+      steps: (Array.isArray(c.steps) && c.steps.length ? c.steps : [{ type: 'reply', text: '' }]).map(s => ({
+        type: ['reply', 'webfetch', 'command'].includes(s.type) ? s.type : 'reply',
+        text: s.text || '',
+        url: s.url || '',
+        command: s.command || '',
+        reply: s.reply !== false,
+      })),
+    })) : [];
+    renderCommands();
     togglePunishDuration();
   }
 
@@ -1552,6 +1809,8 @@ npm start</code></pre>
     $('customWords').value = '';
     $('banned').value = '';
     $('ignored').value = '';
+    ccCommands = [];
+    renderCommands();
     $('output').style.display = 'none';
     $('importError').style.display = 'none';
     togglePunishDuration();

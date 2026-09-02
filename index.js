@@ -22,6 +22,7 @@ const WARNINGS_FILE = path.join(DATA_DIR, 'warnings.json');
 const CUSTOM_WORDS_FILE = path.join(DATA_DIR, 'custom_words.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const IGNORED_FILE = path.join(DATA_DIR, 'ignored.json');
+const CUSTOM_COMMANDS_FILE = path.join(DATA_DIR, 'custom_commands.json');
 const LOG_LEVEL = 'info';
 const ADMIN_CACHE_TTL = 60_000;
 const NON_ADMIN_INTERVAL = 60_000;
@@ -56,6 +57,8 @@ const spamTimestamps = new Map();
 const msgKeyBuffer = new Map();
 const ignoredUsers = new Map();
 const groupStats = new Map();
+const customCommands = new Map();
+const senderAdminCache = new Map();
 
 const STATUS = {
   startTime: Date.now(),
@@ -540,62 +543,24 @@ function formatUptime(ms) {
   return parts.join(' ');
 }
 
-async function handleMessage(sock, msg) {
-  if (!msg.key || msg.key.fromMe) return;
-  const remoteJid = msg.key.remoteJid;
-  const sender = msg.key.participant || remoteJid;
-  const text = extractText(msg);
-  if (!text) return;
-
-  if (isGroup(remoteJid)) trackMsgKey(remoteJid, msg.key);
-
-  if (isGroup(remoteJid) && isMuted(remoteJid, sender)) {
-    await sock.sendMessage(remoteJid, { delete: msg.key });
-    addWarning(remoteJid, sender, 'muted', 'bot');
-    let groupName = 'Unknown Group';
-    try { groupName = (await sock.groupMetadata(remoteJid)).subject || groupName; } catch (_) {}
-    await autoPunish(sock, remoteJid, sender, groupName);
-    return;
-  }
-
-  const cmd = text.trim();
-  const replyJid = isGroup(remoteJid) ? remoteJid : sender;
-
-  if (cmd === '!ping') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'pong') }); return; }
-  if (cmd === '!credits') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'credits') }); return; }
-  if (cmd === '!help') { await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'helpPublic') }); return; }
+async function runPublicCommand(sock, cmd, replyJid, remoteJid) {
+  const lang = getGroupLang(remoteJid);
+  if (cmd === '!ping') { await sock.sendMessage(replyJid, { text: t(lang, 'pong') }); return true; }
+  if (cmd === '!credits') { await sock.sendMessage(replyJid, { text: t(lang, 'credits') }); return true; }
+  if (cmd === '!help') { await sock.sendMessage(replyJid, { text: t(lang, 'helpPublic') }); return true; }
   if (cmd === '!coinflip') {
-    const lang = getGroupLang(remoteJid);
     const result = Math.random() < 0.5 ? 'heads' : 'tails';
     await sock.sendMessage(replyJid, { text: t(lang, 'coinflip')(t(lang, result)) });
-    return;
+    return true;
   }
   if (cmd === '!status') {
-    await sock.sendMessage(replyJid, { text: t(getGroupLang(remoteJid), 'status')(STATUS.connected, formatUptime(Date.now() - STATUS.startTime)) });
-    return;
+    await sock.sendMessage(replyJid, { text: t(lang, 'status')(STATUS.connected, formatUptime(Date.now() - STATUS.startTime)) });
+    return true;
   }
-  if (!isGroup(remoteJid)) return;
+  return false;
+}
 
-  if (checkSpam(remoteJid, sender)) {
-    if (!isMuted(remoteJid, sender)) {
-      if (!mutedUsers.has(remoteJid)) mutedUsers.set(remoteJid, new Map());
-      mutedUsers.get(remoteJid).set(sender, Date.now() + SPAM_MUTE_DURATION);
-      saveMutes();
-      const lang = getGroupLang(remoteJid);
-      try {
-        let gname = 'Unknown Group';
-        try { gname = (await sock.groupMetadata(remoteJid)).subject || gname; } catch (_) {}
-        await sock.sendMessage(sender, { text: t(lang, 'spamMuteDm')(gname, formatDuration(SPAM_MUTE_DURATION)) });
-      } catch (_) {}
-      await sock.sendMessage(remoteJid, { text: t(lang, 'spamMuted')(sender.split('@')[0]), mentions: [sender] });
-    }
-    await sock.sendMessage(remoteJid, { delete: msg.key });
-    return;
-  }
-
-  const admin = await isBotAdmin(sock, remoteJid);
-  if (!admin) return;
-
+async function runAdminCommand(sock, cmd, msg, remoteJid, sender) {
   const commandMap = {
     '?set-lang': () => handleSetLang(sock, cmd, remoteJid),
     '?help': () => {
@@ -627,7 +592,59 @@ async function handleMessage(sock, msg) {
   };
 
   const prefix = Object.keys(commandMap).find(k => cmd.startsWith(k));
-  if (prefix) { await commandMap[prefix](); return; }
+  if (!prefix) return false;
+  await commandMap[prefix]();
+  return true;
+}
+
+async function handleMessage(sock, msg) {
+  if (!msg.key || msg.key.fromMe) return;
+  const remoteJid = msg.key.remoteJid;
+  const sender = msg.key.participant || remoteJid;
+  const text = extractText(msg);
+  if (!text) return;
+
+  if (isGroup(remoteJid)) trackMsgKey(remoteJid, msg.key);
+
+  if (isGroup(remoteJid) && isMuted(remoteJid, sender)) {
+    await sock.sendMessage(remoteJid, { delete: msg.key });
+    addWarning(remoteJid, sender, 'muted', 'bot');
+    let groupName = 'Unknown Group';
+    try { groupName = (await sock.groupMetadata(remoteJid)).subject || groupName; } catch (_) {}
+    await autoPunish(sock, remoteJid, sender, groupName);
+    return;
+  }
+
+  const cmd = text.trim();
+  const replyJid = isGroup(remoteJid) ? remoteJid : sender;
+
+  if (await runPublicCommand(sock, cmd, replyJid, remoteJid)) return;
+
+  if (!isGroup(remoteJid)) return;
+
+  if (checkSpam(remoteJid, sender)) {
+    if (!isMuted(remoteJid, sender)) {
+      if (!mutedUsers.has(remoteJid)) mutedUsers.set(remoteJid, new Map());
+      mutedUsers.get(remoteJid).set(sender, Date.now() + SPAM_MUTE_DURATION);
+      saveMutes();
+      const lang = getGroupLang(remoteJid);
+      try {
+        let gname = 'Unknown Group';
+        try { gname = (await sock.groupMetadata(remoteJid)).subject || gname; } catch (_) {}
+        await sock.sendMessage(sender, { text: t(lang, 'spamMuteDm')(gname, formatDuration(SPAM_MUTE_DURATION)) });
+      } catch (_) {}
+      await sock.sendMessage(remoteJid, { text: t(lang, 'spamMuted')(sender.split('@')[0]), mentions: [sender] });
+    }
+    await sock.sendMessage(remoteJid, { delete: msg.key });
+    return;
+  }
+
+  if (await runCustomCommand(sock, cmd, msg, remoteJid, sender)) return;
+
+  const admin = await isBotAdmin(sock, remoteJid);
+  if (!admin) return;
+
+  if (await runAdminCommand(sock, cmd, msg, remoteJid, sender)) return;
 
   if (isIgnored(remoteJid, sender)) return;
 
@@ -901,6 +918,7 @@ async function handleExport(sock, groupJid) {
     banned: [...(bannedUsers.get(groupJid) || [])],
     ignored: [...(ignoredUsers.get(groupJid) || [])],
     customWords: [...(customBadwords.get(groupJid) || [])],
+    customCommands: customCommands.get(groupJid) || [],
   };
   const code = Buffer.from(JSON.stringify(data)).toString('base64');
   await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'exported')(code) });
@@ -915,6 +933,7 @@ async function handleImport(sock, cmd, groupJid) {
     if (data.banned) { bannedUsers.set(groupJid, new Set(data.banned)); saveBannedUsers(); }
     if (data.ignored) { ignoredUsers.set(groupJid, new Set(data.ignored)); saveIgnored(); }
     if (data.customWords) { customBadwords.set(groupJid, new Set(data.customWords)); saveCustomBadwords(); }
+    if (data.customCommands) { customCommands.set(groupJid, data.customCommands); saveCustomCommands(); }
     saveSettings();
     await sock.sendMessage(groupJid, { text: t(getGroupLang(groupJid), 'imported') });
   } catch (_) {
@@ -930,6 +949,106 @@ async function handleSetLang(sock, cmd, groupJid) {
   await sock.sendMessage(groupJid, { text: t(code, 'langSet')(code, translations[code].name) });
 }
 
+function renderTemplate(str, ctx) {
+  return String(str)
+    .replace(/\{user\}/g, ctx.userNum)
+    .replace(/\{mention\}/g, ctx.user)
+    .replace(/\{args\}/g, ctx.args)
+    .replace(/\{result\}/g, ctx.result);
+}
+
+async function fetchText(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'wa-mod-bot' } });
+    if (!res.ok) return `HTTP ${res.status}`;
+    const text = await res.text();
+    return text.length > 4000 ? text.slice(0, 4000) + '…' : text;
+  } catch (err) {
+    return `Error: ${err.message}`;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function isSenderAdmin(sock, groupJid, senderJid) {
+  if (!isGroup(groupJid)) return false;
+  const cacheKey = `${groupJid}:${senderJid}`;
+  const now = Date.now();
+  const cached = senderAdminCache.get(cacheKey);
+  if (cached && (now - cached.time) < ADMIN_CACHE_TTL) return cached.value;
+  try {
+    const meta = await sock.groupMetadata(groupJid);
+    const p = meta.participants.find((x) => x.id === senderJid || jidNormalizedUser(x.id) === jidNormalizedUser(senderJid));
+    const result = !!(p?.admin === 'admin' || p?.admin === 'superadmin' || p?.isAdmin);
+    senderAdminCache.set(cacheKey, { time: now, value: result });
+    return result;
+  } catch (_) {
+    return false;
+  }
+}
+
+function loadCustomCommands() {
+  const data = loadJson(CUSTOM_COMMANDS_FILE, 'custom commands');
+  for (const [gJid, arr] of Object.entries(data)) {
+    customCommands.set(gJid, Array.isArray(arr) ? arr : []);
+  }
+}
+function saveCustomCommands() {
+  saveJson(CUSTOM_COMMANDS_FILE, 'custom commands', Object.fromEntries(customCommands));
+}
+
+function findCustomCommand(groupJid, cmd) {
+  const arr = customCommands.get(groupJid);
+  if (!arr || arr.length === 0) return null;
+  const trigger = cmd.split(/\s+/)[0].toLowerCase();
+  for (const c of arr) {
+    if (String(c.prefix + c.name).toLowerCase() === trigger) return c;
+  }
+  return null;
+}
+
+async function runCustomCommand(sock, cmd, msg, remoteJid, sender) {
+  const cc = findCustomCommand(remoteJid, cmd);
+  if (!cc) return false;
+
+  if (cc.adminOnly && !(await isSenderAdmin(sock, remoteJid, sender))) return false;
+
+  const replyJid = isGroup(remoteJid) ? remoteJid : sender;
+  const args = cmd.replace(/^\S+\s*/, '').trim();
+  const ctx = {
+    user: sender,
+    userNum: sender.split('@')[0],
+    args,
+    result: '',
+  };
+
+  for (const step of cc.steps || []) {
+    try {
+      if (step.type === 'reply') {
+        await sock.sendMessage(replyJid, { text: renderTemplate(step.text || '', ctx) });
+      } else if (step.type === 'webfetch') {
+        const url = renderTemplate(step.url || '', ctx);
+        ctx.result = await fetchText(url);
+        if (step.reply !== false) {
+          await sock.sendMessage(replyJid, { text: ctx.result });
+        }
+      } else if (step.type === 'command') {
+        const cmdStr = renderTemplate(step.command || '', ctx).trim();
+        if (cmdStr.startsWith('!')) {
+          await runPublicCommand(sock, cmdStr, replyJid, remoteJid);
+        } else if (cmdStr.startsWith('?') && await isBotAdmin(sock, remoteJid)) {
+          await runAdminCommand(sock, cmdStr, msg, remoteJid, sender);
+        }
+      }
+    } catch (err) {
+      logger.error({ err, step }, 'Custom command step failed');
+    }
+  }
+  return true;
+}
+
 loadIgnored();
 loadBannedUsers();
 loadGroupLangs();
@@ -937,4 +1056,5 @@ loadMutes();
 loadWarnings();
 loadCustomBadwords();
 loadSettings();
+loadCustomCommands();
 connect().catch((err) => { logger.error(err, 'Fatal startup error'); process.exit(1); });
