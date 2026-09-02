@@ -950,11 +950,9 @@ async function handleSetLang(sock, cmd, groupJid) {
 }
 
 function renderTemplate(str, ctx) {
-  return String(str)
-    .replace(/\{user\}/g, ctx.userNum)
-    .replace(/\{mention\}/g, ctx.user)
-    .replace(/\{args\}/g, ctx.args)
-    .replace(/\{result\}/g, ctx.result);
+  return String(str).replace(/\{(\w+)\}/g, (m, key) => (
+    Object.prototype.hasOwnProperty.call(ctx, key) ? String(ctx[key]) : m
+  ));
 }
 
 async function fetchText(url) {
@@ -1018,8 +1016,8 @@ async function runCustomCommand(sock, cmd, msg, remoteJid, sender) {
   const replyJid = isGroup(remoteJid) ? remoteJid : sender;
   const args = cmd.replace(/^\S+\s*/, '').trim();
   const ctx = {
-    user: sender,
-    userNum: sender.split('@')[0],
+    user: sender.split('@')[0],
+    mention: sender,
     args,
     result: '',
   };
@@ -1030,10 +1028,10 @@ async function runCustomCommand(sock, cmd, msg, remoteJid, sender) {
         await sock.sendMessage(replyJid, { text: renderTemplate(step.text || '', ctx) });
       } else if (step.type === 'webfetch') {
         const url = renderTemplate(step.url || '', ctx);
-        ctx.result = await fetchText(url);
-        if (step.reply !== false) {
-          await sock.sendMessage(replyJid, { text: ctx.result });
-        }
+        const body = await fetchText(url);
+        ctx.result = body;
+        const varName = (step.var || '').trim();
+        if (varName) ctx[varName] = body;
       } else if (step.type === 'command') {
         const cmdStr = renderTemplate(step.command || '', ctx).trim();
         if (cmdStr.startsWith('!')) {

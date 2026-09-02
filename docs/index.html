@@ -582,7 +582,7 @@ npm start</code></pre>
       toastCopied: `Copied to clipboard`,
       toastLoaded: `Code loaded`,
       ccTitle: `Custom Commands`,
-      ccHint: `Commands you define here run a list of steps when triggered. Placeholders: {user} sender number, {args} text after the command, {result} last web fetch result.`,
+      ccHint: `Web fetch steps save their result into a variable; use it in Reply text as {variable}. Built-ins: {user} sender number, {args} text after the command.`,
       ccAdd: `Add command`,
       ccRemove: `Remove`,
       ccPrefix: `Prefix`,
@@ -592,7 +592,7 @@ npm start</code></pre>
       ccStepReply: `Reply`,
       ccStepWebfetch: `Web fetch`,
       ccStepCommand: `Run command`,
-      ccAutoReply: `Reply with the result`,
+      ccVar: `Variable name`,
       ccEmpty: `No custom commands yet.`
     },
     cs: {
@@ -712,7 +712,7 @@ npm start</code></pre>
       toastCopied: `Zkopírováno do schránky`,
       toastLoaded: `Kód načten`,
       ccTitle: `Vlastní příkazy`,
-      ccHint: `Zde definované příkazy po spuštění provedou seznam kroků. Zástupné symboly: {user} číslo odesílatele, {args} text za příkazem, {result} výsledek posledního webového dotazu.`,
+      ccHint: `Kroky webového dotazu uloží výsledek do proměnné; použijte ji v textu odpovědi jako {proměnná}. Vestavěné: {user} číslo odesílatele, {args} text za příkazem.`,
       ccAdd: `Přidat příkaz`,
       ccRemove: `Odebrat`,
       ccPrefix: `Předpona`,
@@ -722,7 +722,7 @@ npm start</code></pre>
       ccStepReply: `Odpovědět`,
       ccStepWebfetch: `Webový dotaz`,
       ccStepCommand: `Spustit příkaz`,
-      ccAutoReply: `Odpovědět výsledkem`,
+      ccVar: `Název proměnné`,
       ccEmpty: `Zatím žádné vlastní příkazy.`
     },
     es: {
@@ -842,7 +842,7 @@ npm start</code></pre>
       toastCopied: `Copiado al portapapeles`,
       toastLoaded: `Código cargado`,
       ccTitle: `Comandos personalizados`,
-      ccHint: `Los comandos que definas aquí ejecutan una lista de pasos al activarse. Marcadores: {user} número del remitente, {args} texto tras el comando, {result} resultado de la última consulta web.`,
+      ccHint: `Los pasos de consulta web guardan su resultado en una variable; úsala en el texto de respuesta como {variable}. Integrados: {user} número del remitente, {args} texto tras el comando.`,
       ccAdd: `Añadir comando`,
       ccRemove: `Quitar`,
       ccPrefix: `Prefijo`,
@@ -852,7 +852,7 @@ npm start</code></pre>
       ccStepReply: `Responder`,
       ccStepWebfetch: `Consulta web`,
       ccStepCommand: `Ejecutar comando`,
-      ccAutoReply: `Responder con el resultado`,
+      ccVar: `Nombre de variable`,
       ccEmpty: `Aún no hay comandos personalizados.`
     },
     de: {
@@ -972,7 +972,7 @@ npm start</code></pre>
       toastCopied: `In die Zwischenablage kopiert`,
       toastLoaded: `Code geladen`,
       ccTitle: `Benutzerdefinierte Befehle`,
-      ccHint: `Befehle, die du hier definierst, führen beim Auslösen eine Liste von Schritten aus. Platzhalter: {user} Absendernummer, {args} Text nach dem Befehl, {result} Ergebnis des letzten Webaufrufs.`,
+      ccHint: `Webabruf-Schritte speichern ihr Ergebnis in einer Variable; verwende sie im Antworttext als {variable}. Eingebaut: {user} Absendernummer, {args} Text nach dem Befehl.`,
       ccAdd: `Befehl hinzufügen`,
       ccRemove: `Entfernen`,
       ccPrefix: `Präfix`,
@@ -982,7 +982,7 @@ npm start</code></pre>
       ccStepReply: `Antworten`,
       ccStepWebfetch: `Webabruf`,
       ccStepCommand: `Befehl ausführen`,
-      ccAutoReply: `Mit dem Ergebnis antworten`,
+      ccVar: `Variablenname`,
       ccEmpty: `Noch keine benutzerdefinierten Befehle.`
     },
     fr: {
@@ -1102,7 +1102,7 @@ npm start</code></pre>
       toastCopied: `Copié dans le presse-papiers`,
       toastLoaded: `Code chargé`,
       ccTitle: `Commandes personnalisées`,
-      ccHint: `Les commandes définies ici exécutent une liste d'étapes lorsqu'elles sont déclenchées. Variables : {user} numéro de l'expéditeur, {args} texte après la commande, {result} résultat du dernier appel web.`,
+      ccHint: `Les étapes d'appel web enregistrent leur résultat dans une variable ; utilisez-la dans le texte de réponse comme {variable}. Intégrés : {user} numéro de l'expéditeur, {args} texte après la commande.`,
       ccAdd: `Ajouter une commande`,
       ccRemove: `Retirer`,
       ccPrefix: `Préfixe`,
@@ -1112,7 +1112,7 @@ npm start</code></pre>
       ccStepReply: `Répondre`,
       ccStepWebfetch: `Appel web`,
       ccStepCommand: `Exécuter une commande`,
-      ccAutoReply: `Répondre avec le résultat`,
+      ccVar: `Nom de la variable`,
       ccEmpty: `Aucune commande personnalisée pour l'instant.`
     },
     pt: {
@@ -1232,7 +1232,7 @@ npm start</code></pre>
       toastCopied: `Copiado para a área de transferência`,
       toastLoaded: `Código carregado`,
       ccTitle: `Comandos personalizados`,
-      ccHint: `Os comandos que você definir aqui executam uma lista de etapas ao serem acionados. Variáveis: {user} número do remetente, {args} texto após o comando, {result} resultado da última consulta web.`,
+      ccHint: `As etapas de consulta web salvam o resultado em uma variável; use-a no texto de resposta como {variável}. Integradas: {user} número do remetente, {args} texto após o comando.`,
       ccAdd: `Adicionar comando`,
       ccRemove: `Remover`,
       ccPrefix: `Prefixo`,
@@ -1242,7 +1242,7 @@ npm start</code></pre>
       ccStepReply: `Responder`,
       ccStepWebfetch: `Consulta web`,
       ccStepCommand: `Executar comando`,
-      ccAutoReply: `Responder com o resultado`,
+      ccVar: `Nome da variável`,
       ccEmpty: `Nenhum comando personalizado ainda.`
     },
     ru: {
@@ -1362,7 +1362,7 @@ npm start</code></pre>
       toastCopied: `Скопировано в буфер обмена`,
       toastLoaded: `Код загружен`,
       ccTitle: `Пользовательские команды`,
-      ccHint: `Определённые здесь команды при срабатывании выполняют список шагов. Переменные: {user} номер отправителя, {args} текст после команды, {result} результат последнего веб-запроса.`,
+      ccHint: `Шаги веб-запроса сохраняют результат в переменную; используйте её в тексте ответа как {переменная}. Встроенные: {user} номер отправителя, {args} текст после команды.`,
       ccAdd: `Добавить команду`,
       ccRemove: `Удалить`,
       ccPrefix: `Префикс`,
@@ -1372,7 +1372,7 @@ npm start</code></pre>
       ccStepReply: `Ответить`,
       ccStepWebfetch: `Веб-запрос`,
       ccStepCommand: `Выполнить команду`,
-      ccAutoReply: `Ответить результатом`,
+      ccVar: `Имя переменной`,
       ccEmpty: `Пользовательских команд пока нет.`
     },
     id: {
@@ -1492,7 +1492,7 @@ npm start</code></pre>
       toastCopied: `Disalin ke papan klip`,
       toastLoaded: `Kode dimuat`,
       ccTitle: `Perintah khusus`,
-      ccHint: `Perintah yang Anda definisikan di sini menjalankan daftar langkah saat dipicu. Placeholder: {user} nomor pengirim, {args} teks setelah perintah, {result} hasil fetch web terakhir.`,
+      ccHint: `Langkah fetch web menyimpan hasilnya ke variabel; gunakan di teks balasan sebagai {variabel}. Bawaan: {user} nomor pengirim, {args} teks setelah perintah.`,
       ccAdd: `Tambah perintah`,
       ccRemove: `Hapus`,
       ccPrefix: `Awalan`,
@@ -1502,7 +1502,7 @@ npm start</code></pre>
       ccStepReply: `Balas`,
       ccStepWebfetch: `Fetch web`,
       ccStepCommand: `Jalankan perintah`,
-      ccAutoReply: `Balas dengan hasilnya`,
+      ccVar: `Nama variabel`,
       ccEmpty: `Belum ada perintah khusus.`
     }
   };
@@ -1603,7 +1603,7 @@ npm start</code></pre>
       fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="text" value="${escapeAttr(s.text || '')}" placeholder="...">`;
     } else if (s.type === 'webfetch') {
       fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="url" value="${escapeAttr(s.url || '')}" placeholder="https://">
-        <label class="cc-chk"><input type="checkbox" data-ci="${ci}" data-si="${si}" data-field="reply" ${s.reply !== false ? 'checked' : ''}> <span data-i18n="ccAutoReply">${tt('ccAutoReply')}</span></label>`;
+        <input type="text" data-ci="${ci}" data-si="${si}" data-field="var" value="${escapeAttr(s.var || '')}" placeholder="${tt('ccVar')}">`;
     } else {
       fields = `<input type="text" data-ci="${ci}" data-si="${si}" data-field="command" value="${escapeAttr(s.command || '')}" placeholder="?settings">`;
     }
@@ -1673,7 +1673,6 @@ npm start</code></pre>
         const si = parseInt(el.dataset.si, 10);
         const step = cmd.steps[si];
         if (el.dataset.field === 'type') { step.type = el.value; renderCommands(); return; }
-        if (el.dataset.field === 'reply') step.reply = el.checked;
       }
     });
     wrap.addEventListener('input', (e) => {
@@ -1689,6 +1688,7 @@ npm start</code></pre>
         const step = cmd.steps[si];
         if (el.dataset.field === 'text') step.text = el.value;
         else if (el.dataset.field === 'url') step.url = el.value;
+        else if (el.dataset.field === 'var') step.var = el.value;
         else if (el.dataset.field === 'command') step.command = el.value;
       }
     });
@@ -1732,7 +1732,7 @@ npm start</code></pre>
           return false;
         }).map(s => {
           if (s.type === 'reply') return { type: 'reply', text: s.text };
-          if (s.type === 'webfetch') return { type: 'webfetch', url: s.url, reply: s.reply !== false };
+          if (s.type === 'webfetch') return { type: 'webfetch', url: s.url, var: s.var ? s.var.trim() : '' };
           return { type: 'command', command: s.command };
         }),
       })),
@@ -1762,7 +1762,7 @@ npm start</code></pre>
         text: s.text || '',
         url: s.url || '',
         command: s.command || '',
-        reply: s.reply !== false,
+        var: s.var || '',
       })),
     })) : [];
     renderCommands();
