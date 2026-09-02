@@ -970,6 +970,19 @@ async function fetchText(url) {
   }
 }
 
+function storeFetchResult(ctx, raw, varName) {
+  ctx.result = raw;
+  if (varName) ctx[varName] = raw;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      for (const [k, v] of Object.entries(parsed)) {
+        ctx[k] = typeof v === 'string' ? v : (v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+      }
+    }
+  } catch (_) {}
+}
+
 async function isSenderAdmin(sock, groupJid, senderJid) {
   if (!isGroup(groupJid)) return false;
   const cacheKey = `${groupJid}:${senderJid}`;
@@ -1029,9 +1042,7 @@ async function runCustomCommand(sock, cmd, msg, remoteJid, sender) {
       } else if (step.type === 'webfetch') {
         const url = renderTemplate(step.url || '', ctx);
         const body = await fetchText(url);
-        ctx.result = body;
-        const varName = (step.var || '').trim();
-        if (varName) ctx[varName] = body;
+        storeFetchResult(ctx, body, (step.var || '').trim());
       } else if (step.type === 'command') {
         const cmdStr = renderTemplate(step.command || '', ctx).trim();
         if (cmdStr.startsWith('!')) {
