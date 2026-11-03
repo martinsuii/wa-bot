@@ -1,4 +1,4 @@
-# WA Mod Bot
+# Ran bot
 
 A WhatsApp moderation bot built with [Baileys](https://github.com/WhiskeySockets/Baileys). Detects and deletes profanity in groups, warns users via DM, and provides admin tools for group management.
 
