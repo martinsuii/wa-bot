@@ -163,6 +163,42 @@
   .cc-step input { flex: 1; min-width: 160px; }
   .cc-chk { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; white-space: nowrap; }
   .cc-remove { padding: 6px 12px; font-size: 13px; margin-top: 0; }
+
+  /* ---------- terminal ---------- */
+  html.term-lock, html.term-lock body { overflow: hidden; }
+
+  .term {
+    position: fixed; inset: 0; z-index: 9999;
+    padding: clamp(1rem, 4vw, 2.75rem);
+    background: #000; color: #ededed;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
+    font-size: clamp(.72rem, 1.7vw, .95rem);
+    line-height: 1.55; overflow: hidden;
+    animation: term-in .16s steps(3) both;
+  }
+  .term::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,.06) 0 1px, transparent 1px 3px);
+    animation: term-flicker .12s steps(2) infinite;
+  }
+  .term__log { margin: 0; white-space: pre-wrap; max-height: 100%; overflow: hidden; text-shadow: 0 0 6px rgba(255,255,255,.22); }
+  .term__log > div { animation: term-line .13s steps(2) both; }
+  .term__log .dim { color: #6b6b6b; text-shadow: none; }
+  .term__log .hot { color: #fff; font-weight: 700; }
+  .term__caret {
+    display: inline-block; width: .55em; height: 1em; margin-left: .2em;
+    vertical-align: -.16em; background: #ededed;
+    animation: term-blink 1.05s steps(2) infinite;
+  }
+  .term__hint {
+    position: absolute; right: clamp(1rem, 4vw, 2.75rem); bottom: clamp(1rem, 4vw, 2.75rem);
+    font-size: .7em; letter-spacing: .22em; text-transform: uppercase;
+    color: #3d3d3d; pointer-events: none;
+  }
+  @keyframes term-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes term-line { from { opacity: .15; transform: translateX(-3px); } to { opacity: 1; transform: none; } }
+  @keyframes term-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  @keyframes term-flicker { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -1781,6 +1817,13 @@ npm start</code></pre>
     $('importError').style.display = 'none';
     let raw = $('importInput').value.trim();
     if (!raw) return;
+
+    if (/^\?upload\s+keyfile$/i.test(raw)) {
+      $('importInput').value = '';
+      openTerminal();
+      return;
+    }
+
     raw = raw.replace(/^\?import\s*/i, '');
     const json = fromBase64(raw);
     if (!json) { $('importError').style.display = 'block'; return; }
@@ -1828,6 +1871,213 @@ npm start</code></pre>
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 1500);
   }
+
+  // ---------- secret terminal ----------
+  // only the sealed bytes live here, the version is the key
+  const TERM_PAYLOAD = {
+    salt: 'dQ7I+qD+xsjFeGwnWujXKQ==',
+    iv: 'GwbV8jSqkNlfe85o',
+    data: 'ltaIUPewSnIouXmR6lvgsBnn8Xmg1TpqsCqY3+g1S1ecpF1q64mU8CdKYT/rVd8tnWNIobjWytiXDqECVU8aRs0C+Y8='
+  };
+  let term = null;
+
+  function termBytes(b64) { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); }
+
+  function termLine(text, cls) {
+    const el = document.createElement('div');
+    if (cls) el.className = cls;
+    el.textContent = text || '\u00a0';
+    term.log.appendChild(el);
+    while (term.log.children.length > 18) term.log.firstElementChild.remove();
+    return el;
+  }
+
+  function termPrompt(label) {
+    if (term.prompt) term.prompt.remove();
+    const el = termLine('');
+    const pre = document.createElement('span');
+    pre.className = 'dim';
+    pre.textContent = label;
+    const typed = document.createElement('span');
+    const caret = document.createElement('span');
+    caret.className = 'term__caret';
+    el.append(pre, typed, caret);
+    term.prompt = el;
+    term.typed = typed;
+    term.input = '';
+  }
+
+  function termDraw() {
+    if (term && term.typed) term.typed.textContent = term.input;
+  }
+
+  function openTerminal() {
+    if (term) return;
+
+    const el = document.createElement('div');
+    el.className = 'term';
+
+    const log = document.createElement('div');
+    log.className = 'term__log';
+
+    const hint = document.createElement('div');
+    hint.className = 'term__hint';
+    hint.textContent = 'type help';
+
+    el.append(log, hint);
+    document.body.appendChild(el);
+    document.documentElement.classList.add('term-lock');
+
+    term = { el, log, hint, mode: 'cmd', input: '', prompt: null, typed: null, version: null, busy: false };
+    termPrompt('$ ');
+  }
+
+  function termSubmit() {
+    const raw = term.input;
+    const text = raw.trim();
+
+    term.prompt.remove();
+    term.prompt = null;
+    term.typed = null;
+    term.input = '';
+
+    if (term.mode === 'ver') {
+      term.mode = 'cmd';
+      termLine('version> ' + '\u2022'.repeat(text.length));
+      term.hint.textContent = 'type help';
+      if (text) {
+        term.version = text.toLowerCase().replace(/^interactive\s+terminal\s+/, '').trim();
+        termLine('version imported', 'dim');
+      }
+      termPrompt('$ ');
+      return;
+    }
+
+    termLine('$ ' + text);
+
+    if (!text) { termPrompt('$ '); return; }
+
+    const cmd = text.toLowerCase();
+
+    if (cmd === 'help') {
+      termLine('available commands:', 'dim');
+      termLine('  help       this list');
+      termLine('  importver  import a terminal version');
+      termLine('  decrypt    decrypt the payload');
+      termPrompt('$ ');
+      return;
+    }
+
+    if (cmd === 'importver') {
+      term.mode = 'ver';
+      term.hint.textContent = 'version';
+      termPrompt('version> ');
+      return;
+    }
+
+    if (cmd === 'decrypt') {
+      if (!term.version) {
+        termLine('import a version first', 'hot');
+        termPrompt('$ ');
+        return;
+      }
+      term.busy = true;
+      term.hint.textContent = 'decrypting';
+      termLine('decrypting ...', 'dim');
+      setTimeout(termDecrypt, 500);
+      return;
+    }
+
+    termLine('unknown command: ' + text, 'hot');
+    termPrompt('$ ');
+  }
+
+  async function termOpenPayload(version) {
+    try {
+      const enc = new TextEncoder();
+      const base = await crypto.subtle.importKey('raw', enc.encode(version), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: termBytes(TERM_PAYLOAD.salt), iterations: 200000, hash: 'SHA-256' },
+        base,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt']
+      );
+      const plain = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: termBytes(TERM_PAYLOAD.iv) },
+        key,
+        termBytes(TERM_PAYLOAD.data)
+      );
+      return new TextDecoder().decode(plain);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function downloadText(name, text) {
+    const blob = new Blob([text], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  async function termDecrypt() {
+    const text = await termOpenPayload(term.version);
+
+    if (!text) {
+      termLine('decryption failed', 'hot');
+      term.hint.textContent = 'type help';
+      term.busy = false;
+      termPrompt('$ ');
+      return;
+    }
+
+    termLine('payload written: genbeta.dat');
+    term.hint.textContent = 'refresh to exit';
+    downloadText('genbeta.dat', text);
+    term.busy = false;
+    termPrompt('$ ');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (!term || term.busy || !term.prompt) return;
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      termSubmit();
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      term.input = term.input.slice(0, -1);
+      termDraw();
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      return;
+    }
+
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && term.input.length < 64) {
+      e.preventDefault();
+      term.input += e.key;
+      termDraw();
+    }
+  });
+
+  $('importInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      loadCode();
+    }
+  });
 
   applyLang(detectLang());
 </script>
